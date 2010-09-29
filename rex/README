@@ -1,0 +1,40 @@
+Author = Rich Alesi <walesi@andrew.cmu.edu> 09/01/09
+
+This package is designed to do the following:
+
+
+Develop a method to extract the following information from an excel file:
+
+	Process parameters
+	Data file name
+
+From this information, the script will then parse the available data into individual curves
+
+We can then:
+
+	Develop process dependant analysis on the data
+	Plot the data with premade custom graphs
+		(Labbook) - 8X10 subplots (.png)
+	Have smart labels developed from the process paramters
+	Save the resultant curves in a .xls file for subsequent analysis in excel
+	Save the resultant curves in a .dat file for easy import in the future
+	Save the results of the experimental anlaysis in a second sheet in excel
+	
+There is an additional command line tool to provide fast custom plots with the plotting commands found in this package.
+Additionally, with this tool we can submit the processed .dat file to obtain quick plotting
+
+
+File Structure
+
+REX/							root path
+	__init__.py					initialization file to allow import of all subclasses and containining Experiment parent class
+	tga.py					process TXT files obtained from NETL TGA
+	bet.py					process TXT raw files from G. Lowry BET
+	tgams.py				process 2 TXT files from TGAMS at NETL
+	pfr.py					process ASC files from NETL Packed Bed Reactor (Lab 323)
+	labview.py				process TXT file obtained from LABVIEW VI at CMU
+	drifts.py				process JDX files obtained from DRIFTS
+	io.py
+	xl.py
+
+from 

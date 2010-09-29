@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from rex import *
+import sys
+from pylab import *
+from optparse import OptionParser
+
+parser = OptionParser()
+
+parser.add_option("-e", "--exp", dest="experiment",
+        help="Experiment type", metavar="TYPE")
+parser.add_option("-s", "--stage", dest="stage",
+        help="Experimental stage (-1: des, 0: all, 1: ads)", metavar="STAGE")
+parser.add_option("-f", "--file", dest="filename",
+        help="Plot file directly", metavar="FILE")
+parser.add_option("-q", "--quiet",
+        action="store_false", dest="verbose", default=True,
+        help="don't print status messages to stdout")
+parser.set_defaults(stage = 0, experiment='PFR')
+
+(options, args) = parser.parse_args()
+
+print options.stage
+
+if options.experiment == 'PFR':
+    TYPE = type.PFR
+elif options.experiment == 'TGMS':
+    TYPE = type.TGMS
+elif options.experiment == 'TGA':
+    TYPE = type.TGA
+elif options.experiment == 'DRIFTS':
+    TYPE = type.DRIFTS
+for arg in args:
+    arg = int(arg)
+    TEST = TYPE(prompt=arg)
+    for key in sort(TEST._params.keys()):
+        
+        print '%s     =     %s' % (key, TEST._params[key])
+    
+#    TEST.ex_plot('temp','change', stage = int(options.stage))
+
+
