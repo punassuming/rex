@@ -109,7 +109,7 @@ class Curve(dict):
 
 
     # Plotting Methods
-    def ex_plot(self, X, Y, ttl='', label='', argl='', stage=0, shw=False, **kwargs):
+    def ex_plot(self, X, Y, ttl='', label='', argl='', stage=0, shw=False, smoothe=False, **kwargs):
         go_with_x()
 
         #markers = ['s','o','x','.','<','>','D','H','^','_','d','h',',','p','+','v','x',',']
@@ -117,7 +117,10 @@ class Curve(dict):
         x_list, x_ax = self.get(X, stage=stage)
         y_list, y_ax = self.get(Y, stage=stage)
 
-        #y_list = filter.smooth(y_list)
+        #print y_list
+        #if smoothe is True:
+            #y_list = filter.smooth(y_list,window_len=5)
+        #print y_list
         if len(x_list) < 450:
             num = 14
         else:
