@@ -50,7 +50,7 @@ class IR(Experiment):
             }
 
         # construct experiment name
-        self._params.set('Name', '%s-%s.%i' % (row[1], row[2], row[3]))
+        self._params.set('Name', '%s-%s.%s' % (row[1], row[2], row[3]))
 
         self._curves._labels = {'N':'\n',
             'n':self._params.get('Name'),

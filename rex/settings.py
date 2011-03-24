@@ -2,6 +2,8 @@
 
 # settings for use with all modules to allow Global variables between classes
 #
+import os
+
 HEADER_ROW = 3
 DATA_BEGIN = 5
 if os.environ.get('SYSTEMROOT'):
