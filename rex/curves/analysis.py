@@ -2,14 +2,17 @@
 import numpy as np
 # Integration Methods
 
-# Midpoint Method return integral components and total integration
+
 def midpoint(X,Y):
+    # Rectangular Midpoint Method returns integral components 
+    # and total integration (sum)
     list = []
     for i in range(1, len(Y)):
         dt = (X[i] - X[i-1])
         list.append(max(Y[i] * dt,0))
-
     # Append additional value to make list size consistent
+    list.append(list[-1])
+
     return np.array(list), sum(list)
 
 def trapezoid(X,Y):

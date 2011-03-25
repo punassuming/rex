@@ -178,7 +178,7 @@ class LABVIEW(Experiment):
         co2_conc = np.polyval(co2_fit, self._curves.get('int:co2')[0])
         h2o_conc = np.polyval(h2o_fit, self._curves.get('int:h2o')[0])
 
-        if h2o_conc.min() < 0 or co2_conc.min() < 0:
+        if h2o_conc.any() < 0 or co2_conc.any() < 0:
             print 'Concentration less than zero, check calibration'
 
         # Even with the warning, we still want to enforce all concentrations above 0
@@ -216,14 +216,17 @@ class LABVIEW(Experiment):
         Void_Ads = 0.116
         Void_Des = 0.037
 
-        Void = 0
+        #Void = 0
 
-        mid_array = []
+        co2_mid = []
+        h2o_mid = []
+        co2_mid_flux, h2o_mid_flux = [],[]
+        co2_norm_flux  = []
         dt_time = []
         trap = []
         simp = []
+        DT = []
         equil_co2 = []
-        h2o_array = []
         co2_baselines = []
         h2o_baselines = []
 
@@ -244,37 +247,49 @@ class LABVIEW(Experiment):
             flow = self._curves.get('flow:act',stage)[0]
             # if length is 0, add one so we don't crap out the integration
             if len(co2) == 0:
-                mid_array.append([np.array([0,0],float),0.000001])
-                h2o_array.append([np.array([0,0],float),0.000001])
+                
+                
+                co2_mid.append(0.000001)
+                co2_norm_flux.append(np.array([0,0],float))
+                co2_mid_flux.append(np.array([0,0],float))
+                h2o_mid.append(0.000001)
+                h2o_mid_flux.append(np.array([0,0],float))
                 trap.append(0.0000001)
                 simp.append(0.0000001)
+                equil_co2.append(-1)
+                DT.append(-1)
                 h2o_baselines.append(np.array([0,0],float))
                 co2_baselines.append(np.array([0,0],float))
                 dt_time.append(np.array([0,0],float))
                 continue
 
             # now resample all values to a set dt
+            # TODO set all timesteps as constant (5s) in order to plot Desorption P & T swing together
             time = np.linspace(old_time[0], old_time[-1], len(old_time))
+            # interpolate each curve to match time
             co2 = np.interp(time, old_time, co2)
             water = np.interp(time, old_time, water)
             flow = np.interp(time, old_time, flow)
 
+            DT.append(time[1] - time[0])
+            #print 'dt for this calculation is: ', dt
+
             # Flow Calculations
             # correct for water in stream (recorded on dry basis
-            flow = flow * 100 / (100 - water)
-            flow_equil = flow[-20:].mean()
+            flow = flow * 1 / (1 - water)
+            flow_equil = flow[-5:].mean()
 
             # determine equilibrium co2 and water values
             
-            h2o_equil = water[-20:].mean()
+            h2o_equil = water[-5:].mean()
 
-            if stage == 1 or stage == 4:
-                co2_equil = max(0.0,co2[-20:].mean())
+            if stage == 1: # or stage == 4:
+                co2_equil = max(0.0,co2[-5:].mean())
             # Define special desorption cases (10%)
-            elif self.prompt in [92,93,94,95]:
-                co2_equil = 10.0
+            elif self.prompt in [92,93,94]:
+                co2_equil = 0.1000
             else:
-                co2_equil = 0.0
+                co2_equil = 0.00002
 
             # Define baseline curve based on 
             co2_baseline = np.ones(len(co2)) * co2_equil
@@ -282,7 +297,25 @@ class LABVIEW(Experiment):
 
             # Calc moles on a kg basis (mol / kg), so divide by mass to get total capacity
             # TODO fix this based on flow diagram
-            co2_calc = abs(flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
+
+            #print 'flow rate is ', flow_equil
+            #print 'Amount (ccm) of CO2 in stream is ', co2_equil
+
+            #print 'flow is ', flow[-10]
+            #print 'Amount close to end ', co2[-2]
+
+
+
+
+            if stage == 1:
+                co2_calc = abs(flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
+            else:
+                co2_calc = (flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
+                
+            if co2_calc.any() < 0:
+                print 'CO2 integration is less than zero, check it out'
+                co2_calc[co2_calc < 0] = 0.00001
+
             h2o_calc = abs(flow * water - flow_equil * h2o_baseline) / 60 / 24.66
 
             # correct for mass of sample
@@ -290,35 +323,46 @@ class LABVIEW(Experiment):
                 co2_calc = co2_calc / self._params.get('mass:act')
                 h2o_calc = h2o_calc / self._params.get('mass:act')
 
-            mid_array.append(analysis.midpoint(time, co2_calc))
-            h2o_array.append(analysis.midpoint(time, h2o_calc))
+            flux_co2, mid_co2 = analysis.midpoint(time, co2_calc)
+            flux_h2o, mid_h2o = analysis.midpoint(time, h2o_calc)
+            
+
+            # Calculation Results (for params)
+            co2_mid.append(mid_co2)
+            h2o_mid.append(mid_h2o)
+            
             trap.append(analysis.trapezoid(time, co2_calc))
             simp.append(analysis.simpson(time, co2_calc))
 
-            co2_baselines.append(co2_baseline * 100)
-            h2o_baselines.append(h2o_baseline * 100)
-            
-            dt_time.append(time)
-
             equil_co2.append(co2_equil)
 
+            # curve composition
+            co2_mid_flux.append(flux_co2)
+            h2o_mid_flux.append(flux_h2o)
+                        
+            co2_baselines.append(co2_baseline * 100)
+            h2o_baselines.append(h2o_baseline * 100)
+
+            dt_time.append(time)
+
+            # TODO reinterpolate fluxes back to realtime
+            
+            co2_norm_flux.append(np.interp(old_time, time, flux_co2))
+
+
             self.__check__('stage' , stage)
-            self.__check__('midpoint : ' , mid_array[i][1])
+            self.__check__('midpoint : ' , co2_mid[i])
             self.__check__('trapezoid : ' , trap[i])
             self.__check__('simpson : ' , simp[i])
 
         # In order to make the correction appear correct on the curves, we apply a gain to the entire curve in the stage of interest so that the integral over the total area is adjusted for our correction.  An alternate method would be to take away the values at the beginning only, which makes the curve look odd
-        mid_flux = [i[0] for i in mid_array]
-        mid  = [i[1] for i in mid_array]
-        mid_sum_correction = [mid[0]-Void_Ads, mid[1]-Void_Des, mid[2]]
-        mid_gain = [mid_sum_correction[i] / mid[i] for i in range(3)]
-        mid_correction = [mid_gain[i] * mid_flux[i] for i in range(3)]
-
-        h2o_mid_flux = [i[0] for i in h2o_array]
-        h2o_mid  = [i[1] for i in h2o_array]
+        mid_void = [max(co2_mid[0]-Void_Ads,0.000001), max(co2_mid[1]-Void_Des,0.000001), co2_mid[2]]
+        mid_correction = [mid_void[i] / co2_mid[i] * co2_norm_flux[i] for i in range(3)]
 
         # Assign Curves
-        self._curves.compose('flux:co2', mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        self._curves.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        # Reinterpolated flux values (to work with time:hr)
+        self._curves.compose('flux:co2', co2_norm_flux , stages, 'Molar Flux [mol/kg*s]')
         self._curves.compose('flux:c:co2', mid_correction , stages, 'Molar Flux [mol/kg*s]')
         self._curves.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration [mol %]')
         self._curves.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flux [mol/kg*s]')
@@ -329,14 +373,14 @@ class LABVIEW(Experiment):
         self._curves.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time [hr]')
 
         # Save values in params
-        self._params.set('cap:ads_mid', mid[0])
-        self._params.set('cap:des_mid', mid[1] + mid[2])
-        self._params.set('cap:desp_mid', mid[1])
-        self._params.set('cap:dest_mid', mid[2])
-        self._params.set('capc:ads_mid' , mid_sum_correction[0])
-        self._params.set('capc:des_mid' , mid_sum_correction[1] + mid_sum_correction[2])
-        self._params.set('capc:desp_mid' , mid_sum_correction[1])
-        self._params.set('capc:dest_mid' , mid_sum_correction[2])
+        self._params.set('cap:ads_mid', co2_mid[0])
+        self._params.set('cap:des_mid', co2_mid[1] + co2_mid[2])
+        self._params.set('cap:desp_mid', co2_mid[1])
+        self._params.set('cap:dest_mid', co2_mid[2])
+        self._params.set('capc:ads_mid' , mid_void[0])
+        self._params.set('capc:des_mid' , mid_void[1] + mid_void[2])
+        self._params.set('capc:desp_mid' , mid_void[1])
+        self._params.set('capc:dest_mid' , mid_void[2])
 
         self._params.set('cap:ads_trap', trap[0])
         self._params.set('cap:des_trap', trap[1] + trap[2])
@@ -362,6 +406,7 @@ class LABVIEW(Experiment):
         self._params.set('cap:dest_h2o_mid', h2o_mid[2])
         
         self._params.set('co2:equil', equil_co2)
+        self._params.set('dt', DT)
 
     def get_coverage(self):
         loading = self._params.get('loading')
