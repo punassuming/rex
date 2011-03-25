@@ -128,7 +128,7 @@ class LABVIEW(Experiment):
             self.get_stage()
 
             # save mass settings
-
+            
             m1 = self._params.get('mass:pre')
             m2 = self._params.get('mass:post')
 
@@ -212,11 +212,17 @@ class LABVIEW(Experiment):
         """
         # TODO implement more robust void space  for labview
         # from void calculation of 200CCM (060310_flowtest_200_updated.xlsx)
+        
+        flow_ads = self._params.get('flow:rxn')
 
-        Void_Ads = 0.116
+        Void_Ads = 0.0
+
         Void_Des = 0.037
 
-        #Void = 0
+        if flow_ads == 100:
+            Void_Ads = 0.116
+        if flow_ads == 200:
+            Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
 
         co2_mid = []
         h2o_mid = []
@@ -265,7 +271,11 @@ class LABVIEW(Experiment):
 
             # now resample all values to a set dt
             # TODO set all timesteps as constant (5s) in order to plot Desorption P & T swing together
-            time = np.linspace(old_time[0], old_time[-1], len(old_time))
+
+            dt = 5.0
+
+            #time = np.linspace(old_time[0], old_time[-1], len(old_time))
+            time = np.arange(old_time[0], old_time[-1], dt)
             # interpolate each curve to match time
             co2 = np.interp(time, old_time, co2)
             water = np.interp(time, old_time, water)
@@ -424,22 +434,22 @@ class LABVIEW(Experiment):
                     covcor.append(np.array([0,0],float))
                     continue
 
-                flux = self._curves.get('flux:co2',stage)[0]
-                flux_corr = self._curves.get('flux:c:co2',stage)[0]
+                flux = self._curves.get('flux:dt:co2',stage)[0]
+                #flux_corr = self._curves.get('flux:c:co2',stage)[0]
 
 
                 cov.append(analysis.running_sum(flux, summing[i]) / loading)
-                covcor.append(analysis.running_sum(flux_corr, summing[i]) / loading)
+                #covcor.append(analysis.running_sum(flux_corr, summing[i]) / loading)
 
 
 
             # Save Curves
             self._curves.compose('cov', cov, stages, 'Amine Efficiency')
-            self._curves.compose('cov:corr', covcor , stages, 'Amine Efficiency')
+            #self._curves.compose('cov:corr', covcor , stages, 'Amine Efficiency')
 
             # and save parameter information
-            self._params.set('effc:ads', covcor[0].max())
-            self._params.set('effc:des', covcor[1].max())
+            #self._params.set('effc:ads', covcor[0].max())
+            #self._params.set('effc:des', covcor[1].max())
             self._params.set('eff:ads', cov[0].max())
             self._params.set('eff:des', cov[1].max())
 
