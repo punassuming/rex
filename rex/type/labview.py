@@ -204,6 +204,13 @@ class LABVIEW(Experiment):
         self._curves._stage[(begin_des < hours)&(hours < begin_tdes)] = DESORPTION_P
         self._curves._stage[(begin_tdes < hours)&(hours < end_des)] = DESORPTION_T
 
+    def reset_stage(self):
+        """
+        Reset stage if timing is modified from the command line
+        """
+        self._curves._stage.fill(0)
+        self.get_stage()
+
 
     def get_flux(self):
         """
@@ -218,10 +225,11 @@ class LABVIEW(Experiment):
         Void_Ads = 0.0
 
         Void_Des = 0.037
-
-        if flow_ads == 100:
+        if self.prompt in [92,93,94]:
+            Void_Ads = 0.037
+        elif flow_ads == 100:
             Void_Ads = 0.116
-        if flow_ads == 200:
+        elif flow_ads == 200:
             Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
 
         co2_mid = []
