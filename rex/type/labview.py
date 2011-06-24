@@ -201,7 +201,9 @@ class LABVIEW(Experiment):
         begin_ads, end_ads, begin_des, begin_tdes, end_des = self._params.get('time:rel')
 
         self._curves._stage[(begin_ads < hours)&(hours < end_ads)] = ADSORPTION
-        self._curves._stage[(begin_des < hours)&(hours < begin_tdes)] = DESORPTION_P
+        # need to take out the first 20 seconds of pressure swing to eliminate
+        # spike in capacity due to valve change
+        self._curves._stage[(begin_des + 0.0055667 < hours)&(hours < begin_tdes)] = DESORPTION_P
         self._curves._stage[(begin_tdes < hours)&(hours < end_des)] = DESORPTION_T
 
     def reset_stage(self):
@@ -374,6 +376,8 @@ class LABVIEW(Experiment):
             self.__check__('simpson : ' , simp[i])
 
         # In order to make the correction appear correct on the curves, we apply a gain to the entire curve in the stage of interest so that the integral over the total area is adjusted for our correction.  An alternate method would be to take away the values at the beginning only, which makes the curve look odd
+        # TODO see if the void space correction should be applied to the molar
+        # amount of CO2 and not the capacity value
         mid_void = [max(co2_mid[0]-Void_Ads,0.000001), max(co2_mid[1]-Void_Des,0.000001), co2_mid[2]]
         mid_correction = [mid_void[i] / co2_mid[i] * co2_norm_flux[i] for i in range(3)]
 
