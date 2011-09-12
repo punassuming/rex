@@ -37,9 +37,9 @@ class IR(Experiment):
         self._raw_columns = {'wave_uc' : [0, 'Wavenumber [cm-1]'],
                 'wave' : [1, 'Wavenumber [cm-1]'],
                 'trans' : [2, 'Transmitance'],
-                'refl' : [3, 'Reflectance'],
+                'abs' : [3, 'Absorbance [A.U]'],
                 'n_trans' : [4, 'Transmitance [%]'],
-                'n_refl' : [5, 'Reflectance [%]']
+                'n_absl' : [5, 'Absorbance [%]']
             }
 
         self._data_array = io.parse_jdx(self._ascii_file)
