@@ -116,16 +116,11 @@ class LABVIEW(Experiment):
         if (os.path.isfile(self._pick_file) and autoload is True) or (not os.path.isfile(self._ascii_file)) or (self._params.get('status') == 'No'):
             pass
         else:
-            #save parameter information from row of excel file
-            row = self._row
-
             # construct experiment name
-            self._params.set('Name', '%s-%s.%s' % (row[1], row[2], row[3]))
+            p = self._params
+            p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run'])
+            
 
-            # Flux correction from run 11
-            # self._params.set('Void', PBR_VOID_SPACE)
-
-            self.correct = correct
             self.prompt = prompt
 
             # find new way to determine stage
@@ -192,10 +187,14 @@ class LABVIEW(Experiment):
 
         hours = self._curves['time:hr']
 
-        # ads: start/stop des: p/t
-        begin_ads, end_ads, begin_des, begin_tdes, end_des = self._params.get('time:rel')
+        p = self._params
+        timing_seq = ['timing:ads<', 'timing:ads>', 'timing:des<', 'timing:des|', 'timing:des>']
+
+        # ads: start/stop des: p/t/stop
+        begin_ads, end_ads, begin_des, begin_tdes, end_des = [p[i] for i in % timing_seq]
 
         self._curves._stage[(begin_ads < hours)&(hours < end_ads)] = ADSORPTION
+
         # need to take out the first 20 seconds of pressure swing to eliminate
         # spike in capacity due to valve change
         self._curves._stage[(begin_des + 0.0055667 < hours)&(hours < begin_tdes)] = DESORPTION_P
