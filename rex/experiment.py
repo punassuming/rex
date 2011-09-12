@@ -3,6 +3,7 @@ import rex.io as io
 from rex.curves import Curve
 import os
 from rex.settings import HEADER_ROW, DATA_BEGIN, KEY_ROW
+from fnmatch import fnmatch
 
 try:
     import cPickle as pickle
@@ -32,21 +33,33 @@ class Param(dict):
     def set(self, name, value):
         self[name] = value
 
-    def get(self, name):
+    # define wildcard matching for params
+    def __getitem__(self, name):
         if self.has_key(name):
-            return self[name]
+            return dict.__getitem__(self,name)
+        elif '*' in name:
+            available=[]
+            for key in self.keys():
+                if fnmatch(key,name):
+                    available.append(key)
+            keys = sorted(available)
+            new_dict = {}
+            for key in keys:
+                new_dict[key] = dict.__getitem__(self,key)
+            return new_dict
         else:
             #return 0
             return None
 
-    #def print(self, names):
-        #'''
-        #Find parameters containing key phrases
-        #'''
-        #if type(names) not 'list' : names = [names]
-        #for i in self.keys()
-            #for j in names:
-                #if j not in '' in i) and ('' in i)]
+    def report(self, pattern='*'):
+        available=[]
+        for key in self.keys():
+            if fnmatch(key,pattern):
+                available.append(key)
+        keys = sorted(available)
+        for key in keys:
+            print "%-17s > %25s" % (key, self[key])
+
 
 class Experiment:
     """
