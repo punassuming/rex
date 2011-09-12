@@ -2,7 +2,7 @@
 import rex.io as io
 from rex.curves import Curve
 import os
-from rex.settings import HEADER_ROW, DATA_BEGIN
+from rex.settings import HEADER_ROW, DATA_BEGIN, KEY_ROW
 
 try:
     import cPickle as pickle
@@ -11,15 +11,23 @@ except:
 
 class Param(dict):
         # Parameter Methods
-    def __init__(self, rows, rowdata={}):
+    def __init__(self, rows, rowdata={}, xl_keys=[]):
         """ Parse all defined values from excel rows into individual paramters """
         dict.__init__(self)
 
+        # if defining values from _row_params
         for i in rowdata.keys():
             if not hasattr(rowdata[i],'__iter__'):
                 self.set(i, rows[rowdata[i]])
             else:
                 self.set(i, [rows[x] for x in rowdata[i]])
+
+        for i, j in enumerate(xl_keys):
+            if j is not None and j != '' and j != 0:
+                self.set(j, rows[i])
+                # TODO add label attribute to each j and save header
+                # information
+                # print '%i > %s: %s' % (i,j,rows[i])
 
     def set(self, name, value):
         self[name] = value
@@ -74,11 +82,15 @@ class Experiment:
         if prompt is None:
             prompt = io.prompted(xlfile, sheet)
 
-        # Get row as list in self._row
+        # Get row, header, and key values
         self._get_row_data(prompt)
 
         # define filenames associated with experiment
-        self._file_names()
+        path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
+        self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
+        self._fig_dir = path + os.sep + 'figures' + os.sep
+        self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
+        print self._ascii_file
 
         # Import saved data (self._param and self._curves) or parse ASCII file
         if os.path.isfile(self._pick_file) and autoload is True:
@@ -94,9 +106,9 @@ class Experiment:
                 self._curves = Curve(self._data_array)
 
             if hasattr(self, '_row_params'):
-                self._params = Param(self._row,self._row_params)
+                self._params = Param(self._row,row_data=self._row_params, xl_keys=self._keys)
             else:
-                self._params = Param([])
+                self._params = Param(self._row,xl_keys=self._keys)
 
             # Ease of use abbr
             self.pg = self._params.get
@@ -121,16 +133,11 @@ class Experiment:
         sht =    io.excel_to_array(filename=self._xl, sheet=self._sh)
         # get all useful information from row
         self._header = [sht[HEADER_ROW][x] for x in range(0,len(sht[:][0]))]
+        self._keys = [sht[KEY_ROW][x] for x in range(0,len(sht[:][0]))]
         self._row = [sht[prompt+DATA_BEGIN][x] for x in range(0,len(sht[:][0]))]
-
-    def _file_names(self):
-        # Construct filenames
-        path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
-        self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
-        self._fig_dir = path + os.sep + 'figures' + os.sep
-        self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
-        print self._ascii_file
-
+        # print self._header
+        # print self._keys
+        # print self._row
 
     # Pickle Methods
     def _save(self):

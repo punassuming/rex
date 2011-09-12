@@ -118,7 +118,7 @@ class LABVIEW(Experiment):
         else:
             # construct experiment name
             p = self._params
-            p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run'])
+            p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run']))
             
 
             self.prompt = prompt
@@ -191,7 +191,7 @@ class LABVIEW(Experiment):
         timing_seq = ['timing:ads<', 'timing:ads>', 'timing:des<', 'timing:des|', 'timing:des>']
 
         # ads: start/stop des: p/t/stop
-        begin_ads, end_ads, begin_des, begin_tdes, end_des = [p[i] for i in % timing_seq]
+        begin_ads, end_ads, begin_des, begin_tdes, end_des = [p[i] for i in timing_seq]
 
         self._curves._stage[(begin_ads < hours)&(hours < end_ads)] = ADSORPTION
 
@@ -398,23 +398,23 @@ class LABVIEW(Experiment):
         self._params.set('capc:desp_mid' , mid_void[1])
         self._params.set('capc:dest_mid' , mid_void[2])
 
-        self._params.set('cap:ads_trap', trap[0])
-        self._params.set('cap:des_trap', trap[1] + trap[2])
-        self._params.set('cap:desp_trap', trap[1])
-        self._params.set('cap:dest_trap', trap[2])
-        self._params.set('capc:ads_trap' , trap[0] - Void_Ads)
-        self._params.set('capc:des_trap' , trap[1] + trap[2] - Void_Des)
-        self._params.set('capc:desp_trap' , trap[1] - Void_Des)
-        self._params.set('capc:dest_trap' , trap[2])
+        # self._params.set('cap:ads_trap', trap[0])
+        # self._params.set('cap:des_trap', trap[1] + trap[2])
+        # self._params.set('cap:desp_trap', trap[1])
+        # self._params.set('cap:dest_trap', trap[2])
+        # self._params.set('capc:ads_trap' , trap[0] - Void_Ads)
+        # self._params.set('capc:des_trap' , trap[1] + trap[2] - Void_Des)
+        # self._params.set('capc:desp_trap' , trap[1] - Void_Des)
+        # self._params.set('capc:dest_trap' , trap[2])
 
-        self._params.set('cap:ads_simp', simp[0])
-        self._params.set('cap:des_simp', simp[1] + simp[2])
-        self._params.set('cap:desp_simp', simp[1])
-        self._params.set('cap:dest_simp', simp[2])
-        self._params.set('capc:ads_simp' , simp[0] - Void_Ads)
-        self._params.set('capc:des_simp' , simp[1] + simp[2] - Void_Des)
-        self._params.set('capc:desp_simp' , simp[1] - Void_Des)
-        self._params.set('capc:dest_simp' , simp[2])
+        # self._params.set('cap:ads_simp', simp[0])
+        # self._params.set('cap:des_simp', simp[1] + simp[2])
+        # self._params.set('cap:desp_simp', simp[1])
+        # self._params.set('cap:dest_simp', simp[2])
+        # self._params.set('capc:ads_simp' , simp[0] - Void_Ads)
+        # self._params.set('capc:des_simp' , simp[1] + simp[2] - Void_Des)
+        # self._params.set('capc:desp_simp' , simp[1] - Void_Des)
+        # self._params.set('capc:dest_simp' , simp[2])
 
         self._params.set('cap:ads_h2o_mid', h2o_mid[0])
         self._params.set('cap:des_h2o_mid', h2o_mid[1] + h2o_mid[2])

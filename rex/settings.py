@@ -5,7 +5,9 @@
 import os
 
 HEADER_ROW = 3
-DATA_BEGIN = 5
+KEY_ROW = 4
+DATA_BEGIN = 6
+
 if os.environ.get('SYSTEMROOT'):
     EXPERIMENT_DB = 'F:\\Data\\experiment.xls'
 else:
