@@ -1,0 +1,182 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to rex’s documentation! &mdash; rex v0.25 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.25',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="rex v0.25 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">rex v0.25 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-rex-s-documentation">
+<h1>Welcome to rex&#8217;s documentation!<a class="headerlink" href="#welcome-to-rex-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<span class="target" id="module-rex"></span><dl class="class">
+<dt id="rex.Experiment">
+<em class="property">class </em><tt class="descclassname">rex.</tt><tt class="descname">Experiment</tt><big>(</big><em>xlfile=''</em>, <em>sheet=''</em>, <em>text=''</em>, <em>prompt=None</em>, <em>delim='t'</em>, <em>txt_col=6</em>, <em>autoload=False</em>, <em>debug=0</em><big>)</big><a class="headerlink" href="#rex.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents the default experimental data super class that
+all individual classes call to</p>
+<p>Variables that can be called to Experiment:
+xlfile = path to excel file
+sheet = name of experimental sheet
+prompt = experimental number (starts with 0)
+delim = either       or ,
+txt_col = column in row that contains ascii data filename
+debug = whether we should print out variables (0-10, 0 equals NO)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="rex.Curve">
+<em class="property">class </em><tt class="descclassname">rex.</tt><tt class="descname">Curve</tt><big>(</big><em>data_array</em>, <em>columns={}</em><big>)</big><a class="headerlink" href="#rex.Curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents an object storing curves as numpy arrays and plotting methods to allow quick visualization</p>
+<dl class="docutils">
+<dt>the curve dictionary has two entires per key.</dt>
+<dd>index 0 is a numpy array containing our data
+index 1 is a str with the axes information used when plotting</dd>
+</dl>
+<p>self._labels are common legend labels used when plotting.  These are defined in the individual type files as a dictionary</p>
+<dl class="method">
+<dt id="rex.Curve.add">
+<tt class="descname">add</tt><big>(</big><em>name</em>, <em>list</em>, <em>axes=''</em><big>)</big><a class="headerlink" href="#rex.Curve.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a curve to the listing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rex.Curve.compose">
+<tt class="descname">compose</tt><big>(</big><em>name</em>, <em>curves</em>, <em>stages</em>, <em>axes</em><big>)</big><a class="headerlink" href="#rex.Curve.compose" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+map provided lists to each stage</blockquote>
+<p>a
+curves and stages are lists</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rex.Curve.del_curve">
+<tt class="descname">del_curve</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#rex.Curve.del_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>delete a curve from the listing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rex.Curve.ex_label">
+<tt class="descname">ex_label</tt><big>(</big><em>label</em>, <em>argl</em><big>)</big><a class="headerlink" href="#rex.Curve.ex_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a string of all comments to be
+appended to the legend</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="rex.Curve.ex_subplot">
+<tt class="descname">ex_subplot</tt><big>(</big><em>X</em>, <em>Y</em>, <em>vert=True</em>, <em>ttls=''</em>, <em>argls=''</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#rex.Curve.ex_subplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Y is a list of curve names,
+vert = vertical subplots if True</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="rex.Param">
+<em class="property">class </em><tt class="descclassname">rex.</tt><tt class="descname">Param</tt><big>(</big><em>rows</em>, <em>rowdata={}</em><big>)</big><a class="headerlink" href="#rex.Param" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to rex&#8217;s documentation!</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">rex v0.25 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Rich Alesi.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.3.
+    </div>
+  </body>
+</html>
