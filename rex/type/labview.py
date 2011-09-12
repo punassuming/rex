@@ -50,36 +50,37 @@ class LABVIEW(Experiment):
                 'conc:a:co2' : [24, 'CO2 Analyzer' ]
                 }
 
-        self._row_params = {
-                '#' : 0,
-                'name' : 1,
-                'exp' : 2,
-                'run' : 3,
-                'book' : 4,
-                'water:0' : 10,
-                'water:hum' : 11,
-                'rxn:0' : 12,
-                'rxn:10' : 13,
-                'rxn:100' : 14,
-                'flow:inert' : 15,
-                'flow:rxn' : 16,
-                'timing:ads<' : 17,
-                'timing:ads>' : 18,
-                'timing:des<' : 19,
-                'timing:des|' : 20,
-                'timing:des>' : 21,
-                'time:rel' : range(17,22),
-                'temp:ads' : 25,
-                'temp:des' : 26,
-                'temp:hum' : 27,
-                'temp:ramp' : 28,
-                'temp:dry' : 29,
-                'time:dry' : 30,
-                'mass:pre' : 31,
-                'mass:post' : 32,
-                'loading' : 33,
-                'notes' : 35
-                }
+        # made obsolete by rex xls modification (include keys in SS)
+        # self._row_params = {
+        #         '#' : 0,
+        #         'name' : 1,
+        #         'exp' : 2,
+        #         'run' : 3,
+        #         'book' : 4,
+        #         'water:0' : 10,
+        #         'water:hum' : 11,
+        #         'rxn:0' : 12,
+        #         'rxn:10' : 13,
+        #         'rxn:100' : 14,
+        #         'flow:inert' : 15,
+        #         'flow:rxn' : 16,
+        #         'timing:ads<' : 17,
+        #         'timing:ads>' : 18,
+        #         'timing:des<' : 19,
+        #         'timing:des|' : 20,
+        #         'timing:des>' : 21,
+        #         'time:rel' : range(17,22),
+        #         'temp:ads' : 25,
+        #         'temp:des' : 26,
+        #         'temp:hum' : 27,
+        #         'temp:ramp' : 28,
+        #         'temp:dry' : 29,
+        #         'time:dry' : 30,
+        #         'mass:pre' : 31,
+        #         'mass:post' : 32,
+        #         'loading' : 33,
+        #         'notes' : 35
+        #         }
 
 
         # After defining the key parameters, we execute our superclasses init
@@ -110,6 +111,8 @@ class LABVIEW(Experiment):
             """
 
         # TODO define better checks and do error proofing
+        # most likely with try statements
+
         if (os.path.isfile(self._pick_file) and autoload is True) or (not os.path.isfile(self._ascii_file)) or (self._params.get('status') == 'No'):
             pass
         else:
@@ -130,17 +133,6 @@ class LABVIEW(Experiment):
 
             # save mass settings
             
-            m1 = self._params.get('mass:pre')
-            m2 = self._params.get('mass:post')
-
-            if type(m2) is float:
-                self._params.set('mass:act',m2)
-            elif type(m1) is float:
-                self._params.set('mass:act',m1)
-
-            if (type(m2) is float) & (type(m1) is float):
-                self._params.set('mass:delta',m2-m1)
-
             self.cal_curves()
 
             print self._params['notes']
