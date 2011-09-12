@@ -2,8 +2,12 @@
 import rex.io as io
 from rex.curves import Curve
 import os
-import pickle
 from rex.settings import HEADER_ROW, DATA_BEGIN
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 class Param(dict):
         # Parameter Methods
@@ -73,12 +77,9 @@ class Experiment:
         # Get row as list in self._row
         self._get_row_data(prompt)
 
-        # Construct filenames
-        path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
-        self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
-        self._fig_dir = path + os.sep + 'figures' + os.sep
-        self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
-        print self._ascii_file
+        # define filenames associated with experiment
+        self._file_names()
+
         # Import saved data (self._param and self._curves) or parse ASCII file
         if os.path.isfile(self._pick_file) and autoload is True:
             self._load()
@@ -106,12 +107,14 @@ class Experiment:
         else:
             print '%s is not accessible.' % (self._ascii_file)
 
-    # debugging method which accepts object and name and displays text output if init debug > priority
+    # Debugging Method: which accepts object and name and displays text output if init debug > priority
     def __check__(self,name,object,priority=2):
         """        if debug setting > priority, print recevied object    """
         if self._debug > priority:
             print '%s = %s' % (name,object)
 
+
+    # IO Methods
     def _get_row_data(self, prompt):
         """ pull relevant info (dependant on excel file) and save as object variables """
         self.__check__('prompt',prompt)
@@ -119,6 +122,14 @@ class Experiment:
         # get all useful information from row
         self._header = [sht[HEADER_ROW][x] for x in range(0,len(sht[:][0]))]
         self._row = [sht[prompt+DATA_BEGIN][x] for x in range(0,len(sht[:][0]))]
+
+    def _file_names(self):
+        # Construct filenames
+        path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
+        self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
+        self._fig_dir = path + os.sep + 'figures' + os.sep
+        self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
+        print self._ascii_file
 
 
     # Pickle Methods
