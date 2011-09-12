@@ -95,6 +95,7 @@ class LABVIEW(Experiment):
 
         if hasattr(self, '_curves'):
             self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time [hr]')
+            self._curves.add('time:min', self._curves['time:sec']/60., 'Time [min]')
 
             """
             lower case is adsorption
@@ -142,6 +143,8 @@ class LABVIEW(Experiment):
 
             self.cal_curves()
 
+            print self._params['notes']
+
             self.get_flux()
             if type(self._params.get('loading')) is float:
                 self.get_coverage()
@@ -188,9 +191,9 @@ class LABVIEW(Experiment):
 
         n2_conc = 1 - co2_conc - h2o_conc
 
-        self._curves.add('conc:co2', co2_conc, 'Concentration [%]')
-        self._curves.add('conc:h2o', h2o_conc, 'Concentration [%]')
-        self._curves.add('conc:n2', n2_conc, 'Concentration [%]')
+        self._curves.add('conc:co2', co2_conc, 'Concentration [mol %]')
+        self._curves.add('conc:h2o', h2o_conc, 'Concentration [mol %]')
+        self._curves.add('conc:n2', n2_conc, 'Concentration [mol %]')
 
 
     def get_stage(self):
