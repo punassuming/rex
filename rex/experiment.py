@@ -38,28 +38,25 @@ class Param(dict):
         if self.has_key(name):
             return dict.__getitem__(self,name)
         elif '*' in name:
-            available=[]
-            for key in self.keys():
-                if fnmatch(key,name):
-                    available.append(key)
-            keys = sorted(available)
             new_dict = {}
-            for key in keys:
+            for key in self.match(name):
                 new_dict[key] = dict.__getitem__(self,key)
             return new_dict
         else:
             #return 0
             return None
 
-    def report(self, pattern='*'):
+    def match(self, pattern='*'):
         available=[]
         for key in self.keys():
             if fnmatch(key,pattern):
                 available.append(key)
         keys = sorted(available)
-        for key in keys:
-            print "%-17s > %25s" % (key, self[key])
+        return keys
 
+    def report(self, pattern='*'):
+        for key in self.match(pattern):
+            print "%-17s > %25s" % (key, self[key])
 
 class Experiment:
     """
@@ -99,11 +96,13 @@ class Experiment:
         self._get_row_data(prompt)
 
         # define filenames associated with experiment
+        # TODO find way to get txt_col information from SS directly
         path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
         self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
         self._fig_dir = path + os.sep + 'figures' + os.sep
         self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
-        print self._ascii_file
+
+        self.__check__('File name: ',self._ascii_file)
 
         # Import saved data (self._param and self._curves) or parse ASCII file
         if os.path.isfile(self._pick_file) and autoload is True:
@@ -124,9 +123,10 @@ class Experiment:
                 self._params = Param(self._row,xl_keys=self._keys)
 
             # Ease of use abbr
-            self.pg = self._params.get
-            self.cg = self._curves.get
+            self.p = self._params
+            self.c = self._curves
             self.pl = self._curves.ex_plot
+            self.twin = self._curves.ex_twinplot
             self.sub = self._curves.ex_subplot
 
         else:
