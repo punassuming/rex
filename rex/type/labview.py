@@ -87,7 +87,7 @@ class LABVIEW(Experiment):
         # which access excel file, pulls info into self._row, and then parses data into self._data_array
         Experiment.__init__(self,
                 delim = ',',
-                txt_col = 5,
+                txt_col = 6,
                 xlfile=xlfile,
                 sheet=sheet,
                 prompt=prompt,
@@ -130,7 +130,7 @@ class LABVIEW(Experiment):
             
             self.cal_curves()
 
-            print self._params['notes']
+            self.__check__('Experimental notes: ' , p['notes'])
 
             self.get_flux()
             if type(self._params.get('loading')) is float:
