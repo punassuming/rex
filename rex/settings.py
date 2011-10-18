@@ -9,9 +9,11 @@ KEY_ROW = 4
 DATA_BEGIN = 6
 
 if os.environ.get('SYSTEMROOT'):
-    EXPERIMENT_DB = 'F:\\Data\\experiment.xls'
+    DATA_DIR = 'F:\\Documents\\data'
+    EXPERIMENT_DB = 'F:\\Documents\\projects\\_figures\\experiment.xls'
 else:
-    EXPERIMENT_DB = '/home/walesi/data/experiment.xls'
+    DATA_DIR = '/home/walesi/data'
+    EXPERIMENT_DB = '/home/walesi/projects/_figures/experiment.xls'
 
 # From experiment 11
 PBR_VOID_SPACE = 0.112

@@ -2,7 +2,7 @@
 import rex.io as io
 from rex.curves import Curve
 import os
-from rex.settings import HEADER_ROW, DATA_BEGIN, KEY_ROW
+from rex.settings import HEADER_ROW, DATA_BEGIN, KEY_ROW, DATA_DIR
 from fnmatch import fnmatch
 
 try:
@@ -88,16 +88,16 @@ class Experiment:
         self._xl = xlfile
         self._sh = sheet
 
-        # Figure out which experiment to process and prompt if not specified at startup
-        if prompt is None:
-            prompt = io.prompted(xlfile, sheet)
+        # Figure out which experiment to process and prompt if not specified
+        # at startup
+        if prompt is None: prompt = io.prompted(xlfile, sheet)
 
         # Get row, header, and key values
         self._get_row_data(prompt)
 
         # define filenames associated with experiment
         # TODO find way to get txt_col information from SS directly
-        path = os.path.dirname(xlfile) + os.sep + self._sh.lower()
+        path = DATA_DIR + os.sep + self._sh.lower()
         self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
         self._fig_dir = path + os.sep + 'figures' + os.sep
         self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
