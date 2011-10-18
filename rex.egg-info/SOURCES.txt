@@ -19,7 +19,7 @@ rex/curves/stats.py
 rex/type/__init__.py
 rex/type/bet.py
 rex/type/default.py
-rex/type/drifts.py
+rex/type/ir.py
 rex/type/labview.py
 rex/type/pfr.py
 rex/type/tag-whit.py
