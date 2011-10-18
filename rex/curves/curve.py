@@ -215,6 +215,8 @@ class Curve(dict):
         return a string of all comments to be
         appended to the legend
         """
+        if len(label) > 0 and label[0] != '_':
+            return label
         comment = ''
         for i in argl:
             phrase = ''
