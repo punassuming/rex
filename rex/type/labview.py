@@ -133,7 +133,7 @@ class LABVIEW(Experiment):
             self.__check__('Experimental notes: ' , p['notes'])
 
             self.get_flux()
-            if type(self._params.get('loading')) is float:
+            if type(self.p.get('loading')) is float:
                 self.get_coverage()
 
             """
@@ -165,8 +165,8 @@ class LABVIEW(Experiment):
         h2o_fit = np.polyfit(h2o_int, h2o_val, 1)
 
         # TODO implement error checks for negative concentrations
-        co2_conc = np.polyval(co2_fit, self._curves.get('int:co2')[0])
-        h2o_conc = np.polyval(h2o_fit, self._curves.get('int:h2o')[0])
+        co2_conc = np.polyval(co2_fit, self.c.get('int:co2')[0])
+        h2o_conc = np.polyval(h2o_fit, self.c.get('int:h2o')[0])
 
         if h2o_conc.any() < 0 or co2_conc.any() < 0:
             print 'Concentration less than zero, check calibration'
@@ -178,33 +178,33 @@ class LABVIEW(Experiment):
 
         n2_conc = 1 - co2_conc - h2o_conc
 
-        self._curves.add('conc:co2', co2_conc, 'Concentration [mol %]')
-        self._curves.add('conc:h2o', h2o_conc, 'Concentration [mol %]')
-        self._curves.add('conc:n2', n2_conc, 'Concentration [mol %]')
+        self.c.add('conc:co2', co2_conc, 'Concentration [mol %]')
+        self.c.add('conc:h2o', h2o_conc, 'Concentration [mol %]')
+        self.c.add('conc:n2', n2_conc, 'Concentration [mol %]')
 
 
     def get_stage(self):
 
-        hours = self._curves['time:hr']
+        hours = self.c['time:hr']
 
-        p = self._params
+        p = self.p
         timing_seq = ['timing:ads<', 'timing:ads>', 'timing:des<', 'timing:des|', 'timing:des>']
 
         # ads: start/stop des: p/t/stop
         begin_ads, end_ads, begin_des, begin_tdes, end_des = [p[i] for i in timing_seq]
 
-        self._curves._stage[(begin_ads < hours)&(hours < end_ads)] = ADSORPTION
+        self.c._stage[(begin_ads < hours)&(hours < end_ads)] = ADSORPTION
 
         # need to take out the first 20 seconds of pressure swing to eliminate
         # spike in capacity due to valve change
-        self._curves._stage[(begin_des + 0.0055667 < hours)&(hours < begin_tdes)] = DESORPTION_P
-        self._curves._stage[(begin_tdes < hours)&(hours < end_des)] = DESORPTION_T
+        self.c._stage[(begin_des + 0.0055667 < hours)&(hours < begin_tdes)] = DESORPTION_P
+        self.c._stage[(begin_tdes < hours)&(hours < end_des)] = DESORPTION_T
 
     def reset_stage(self):
         """
         Reset stage if timing is modified from the command line
         """
-        self._curves._stage.fill(0)
+        self.c._stage.fill(0)
         self.get_stage()
 
 
@@ -216,7 +216,7 @@ class LABVIEW(Experiment):
         # TODO implement more robust void space  for labview
         # from void calculation of 200CCM (060310_flowtest_200_updated.xlsx)
         
-        flow_ads = self._params.get('flow:rxn')
+        flow_ads = self.p.get('flow:rxn')
 
         Void_Ads = 0.0
 
@@ -242,19 +242,19 @@ class LABVIEW(Experiment):
 
         stages = [ADSORPTION, DESORPTION_P, DESORPTION_T]
 
-        old_flow = self._curves.get('flow:dig')[0]
-        co2 = self._curves.get('conc:co2')[0]/100
+        old_flow = self.c.get('flow:dig')[0]
+        co2 = self.c.get('conc:co2')[0]/100
 
         # correct for mass flow meter correction with CO2
         flows = old_flow / ((1- co2) + co2 / 1.1717)
-        self._curves.add('flow:act', flows, 'Flow [sccm]')
+        self.c.add('flow:act', flows, 'Flow [sccm]')
 
         for i, stage in enumerate(stages):
 
-            old_time = self._curves.get('time:sec',stage)[0]
-            co2 = self._curves.get('conc:co2',stage)[0]/100
-            water = self._curves.get('conc:h2o',stage)[0]/100
-            flow = self._curves.get('flow:act',stage)[0]
+            old_time = self.c.get('time:sec',stage)[0]
+            co2 = self.c.get('conc:co2',stage)[0]/100
+            water = self.c.get('conc:h2o',stage)[0]/100
+            flow = self.c.get('flow:act',stage)[0]
             # if length is 0, add one so we don't crap out the integration
             if len(co2) == 0:
                 
@@ -333,9 +333,9 @@ class LABVIEW(Experiment):
             h2o_calc = abs(flow * water - flow_equil * h2o_baseline) / 60 / 24.66
 
             # correct for mass of sample
-            if self._params.has_key('mass:act'):
-                co2_calc = co2_calc / self._params.get('mass:act')
-                h2o_calc = h2o_calc / self._params.get('mass:act')
+            if self.p.has_key('mass:act'):
+                co2_calc = co2_calc / self.p.get('mass:act')
+                h2o_calc = h2o_calc / self.p.get('mass:act')
 
             flux_co2, mid_co2 = analysis.midpoint(time, co2_calc)
             flux_h2o, mid_h2o = analysis.midpoint(time, h2o_calc)
@@ -376,56 +376,56 @@ class LABVIEW(Experiment):
         mid_correction = [mid_void[i] / co2_mid[i] * co2_norm_flux[i] for i in range(3)]
 
         # Assign Curves
-        self._curves.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flux [mol/kg*s]')
         # Reinterpolated flux values (to work with time:hr)
-        self._curves.compose('flux:co2', co2_norm_flux , stages, 'Molar Flux [mol/kg*s]')
-        self._curves.compose('flux:c:co2', mid_correction , stages, 'Molar Flux [mol/kg*s]')
-        self._curves.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration [mol %]')
-        self._curves.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flux [mol/kg*s]')
-        self._curves.compose('conc:h2o:baseline', h2o_baselines, stages, 'Concentration [mo %]')
+        self.c.compose('flux:co2', co2_norm_flux , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('flux:c:co2', mid_correction , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration [mol %]')
+        self.c.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('conc:h2o:baseline', h2o_baselines, stages, 'Concentration [mo %]')
         
         # need a special normalized time to plot all these
-        self._curves.compose('time:dt:sec', dt_time, stages, 'Time [s]')
-        self._curves.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time [hr]')
+        self.c.compose('time:dt:sec', dt_time, stages, 'Time [s]')
+        self.c.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time [hr]')
 
         # Save values in params
-        self._params.set('cap:ads_mid', co2_mid[0])
-        self._params.set('cap:des_mid', co2_mid[1] + co2_mid[2])
-        self._params.set('cap:desp_mid', co2_mid[1])
-        self._params.set('cap:dest_mid', co2_mid[2])
-        self._params.set('capc:ads_mid' , mid_void[0])
-        self._params.set('capc:des_mid' , mid_void[1] + mid_void[2])
-        self._params.set('capc:desp_mid' , mid_void[1])
-        self._params.set('capc:dest_mid' , mid_void[2])
+        self.p.set('cap:ads_mid', co2_mid[0])
+        self.p.set('cap:des_mid', co2_mid[1] + co2_mid[2])
+        self.p.set('cap:desp_mid', co2_mid[1])
+        self.p.set('cap:dest_mid', co2_mid[2])
+        self.p.set('capc:ads_mid' , mid_void[0])
+        self.p.set('capc:des_mid' , mid_void[1] + mid_void[2])
+        self.p.set('capc:desp_mid' , mid_void[1])
+        self.p.set('capc:dest_mid' , mid_void[2])
 
-        # self._params.set('cap:ads_trap', trap[0])
-        # self._params.set('cap:des_trap', trap[1] + trap[2])
-        # self._params.set('cap:desp_trap', trap[1])
-        # self._params.set('cap:dest_trap', trap[2])
-        # self._params.set('capc:ads_trap' , trap[0] - Void_Ads)
-        # self._params.set('capc:des_trap' , trap[1] + trap[2] - Void_Des)
-        # self._params.set('capc:desp_trap' , trap[1] - Void_Des)
-        # self._params.set('capc:dest_trap' , trap[2])
+        # self.p.set('cap:ads_trap', trap[0])
+        # self.p.set('cap:des_trap', trap[1] + trap[2])
+        # self.p.set('cap:desp_trap', trap[1])
+        # self.p.set('cap:dest_trap', trap[2])
+        # self.p.set('capc:ads_trap' , trap[0] - Void_Ads)
+        # self.p.set('capc:des_trap' , trap[1] + trap[2] - Void_Des)
+        # self.p.set('capc:desp_trap' , trap[1] - Void_Des)
+        # self.p.set('capc:dest_trap' , trap[2])
 
-        # self._params.set('cap:ads_simp', simp[0])
-        # self._params.set('cap:des_simp', simp[1] + simp[2])
-        # self._params.set('cap:desp_simp', simp[1])
-        # self._params.set('cap:dest_simp', simp[2])
-        # self._params.set('capc:ads_simp' , simp[0] - Void_Ads)
-        # self._params.set('capc:des_simp' , simp[1] + simp[2] - Void_Des)
-        # self._params.set('capc:desp_simp' , simp[1] - Void_Des)
-        # self._params.set('capc:dest_simp' , simp[2])
+        # self.p.set('cap:ads_simp', simp[0])
+        # self.p.set('cap:des_simp', simp[1] + simp[2])
+        # self.p.set('cap:desp_simp', simp[1])
+        # self.p.set('cap:dest_simp', simp[2])
+        # self.p.set('capc:ads_simp' , simp[0] - Void_Ads)
+        # self.p.set('capc:des_simp' , simp[1] + simp[2] - Void_Des)
+        # self.p.set('capc:desp_simp' , simp[1] - Void_Des)
+        # self.p.set('capc:dest_simp' , simp[2])
 
-        self._params.set('cap:ads_h2o_mid', h2o_mid[0])
-        self._params.set('cap:des_h2o_mid', h2o_mid[1] + h2o_mid[2])
-        self._params.set('cap:desp_h2o_mid', h2o_mid[1])
-        self._params.set('cap:dest_h2o_mid', h2o_mid[2])
+        self.p.set('cap:ads_h2o_mid', h2o_mid[0])
+        self.p.set('cap:des_h2o_mid', h2o_mid[1] + h2o_mid[2])
+        self.p.set('cap:desp_h2o_mid', h2o_mid[1])
+        self.p.set('cap:dest_h2o_mid', h2o_mid[2])
         
-        self._params.set('co2:equil', equil_co2)
-        self._params.set('dt', DT)
+        self.p.set('co2:equil', equil_co2)
+        self.p.set('dt', DT)
 
     def get_coverage(self):
-        loading = self._params.get('loading')
+        loading = self.p.get('loading')
         if loading != 0:
             cov = []
             covcor = []
@@ -434,14 +434,14 @@ class LABVIEW(Experiment):
             summing = [1,-1]
 
             for i, stage in enumerate(stages):
-                co2 = self._curves.get('conc:co2',stage)[0]/100
+                co2 = self.c.get('conc:co2',stage)[0]/100
                 if len(co2) == 0:
                     cov.append(np.array([0,0],float))
                     covcor.append(np.array([0,0],float))
                     continue
 
-                flux = self._curves.get('flux:dt:co2',stage)[0]
-                #flux_corr = self._curves.get('flux:c:co2',stage)[0]
+                flux = self.c.get('flux:dt:co2',stage)[0]
+                #flux_corr = self.c.get('flux:c:co2',stage)[0]
 
 
                 cov.append(analysis.running_sum(flux, summing[i]) / loading)
@@ -450,14 +450,14 @@ class LABVIEW(Experiment):
 
 
             # Save Curves
-            self._curves.compose('cov', cov, stages, 'Amine Efficiency')
-            #self._curves.compose('cov:corr', covcor , stages, 'Amine Efficiency')
+            self.c.compose('cov', cov, stages, 'Amine Efficiency')
+            #self.c.compose('cov:corr', covcor , stages, 'Amine Efficiency')
 
             # and save parameter information
-            #self._params.set('effc:ads', covcor[0].max())
-            #self._params.set('effc:des', covcor[1].max())
-            self._params.set('eff:ads', cov[0].max())
-            self._params.set('eff:des', cov[1].max())
+            #self.p.set('effc:ads', covcor[0].max())
+            #self.p.set('effc:des', covcor[1].max())
+            self.p.set('eff:ads', cov[0].max())
+            self.p.set('eff:des', cov[1].max())
 
 
 
