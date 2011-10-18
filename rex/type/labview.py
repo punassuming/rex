@@ -153,11 +153,11 @@ class LABVIEW(Experiment):
 
     def cal_curves(self):
 
-        h2o_int = float(self._params.get('water:0')),float(self._params.get('water:hum'))
-        co2_int = float(self._params.get('rxn:0')), float(self._params.get('rxn:10')), float(self._params.get('rxn:100'))
+        h2o_int = float(self.p.get('water:0')),float(self.p.get('water:hum'))
+        co2_int = float(self.p.get('rxn:0')), float(self.p.get('rxn:10')), float(self.p.get('rxn:100'))
 
         # TODO insert value from excel
-        humidity = 2.1
+        humidity = self.p.get('water:conc',0)
         h2o_val = [0, humidity]
         co2_val = [0,10,100]
 
@@ -298,7 +298,7 @@ class LABVIEW(Experiment):
             h2o_equil = water[-5:].mean()
 
             if stage == 1: # or stage == 4:
-                co2_equil = max(0.0,co2[-5:].mean())
+                co2_equil = max(0.0,co2[-7:-2].mean())
             # Define special desorption cases (10%)
             elif self.prompt in [92,93,94]:
                 co2_equil = 0.1000
