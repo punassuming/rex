@@ -207,6 +207,28 @@ class LABVIEW(Experiment):
         self.c._stage.fill(0)
         self.get_stage()
 
+    def value_at_time(self, curve, time):
+
+        index = 0
+        hours = self.c['time:hr']
+
+        if curve in self.c.keys():
+            
+            # starting offset is 0.0002 hours or 7 seconds
+            offset = 0.0002
+            while not index:
+                index = np.where((time-offset < hours) & (hours < time+offset))[0]
+                if len(index) > 1: index = index[0]
+                # print index
+                offset += 0.0002
+                # print offset
+
+            try:
+
+                return self.c[curve][index]
+        
+            except IndexError:
+                print 'Time is not within bounds of %s and %s' % (min(hours), max(hours))
 
     def get_flux(self):
         """
