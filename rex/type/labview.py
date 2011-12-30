@@ -28,27 +28,27 @@ class LABVIEW(Experiment):
             autoload=False):
 
         self._raw_columns = {
-                'time:sec' : [0, 'Time (s)' ],
-                'flow:dig' : [1, 'Flow (ccm)' ],
-                'flow:inert' : [2, 'Total Inert' ],
-                'flow:rxn' : [3, 'Flow (ccmTotal Rxn' ],
-                'press:in' : [4, 'Pin (psig)' ],
-                'press:out' : [5, 'Pout (psig)' ],
-                'temp:in' : [6, 'Temperature of Inlet [$\degree$C]' ],
-                'temp:rxn' : [7, 'Temperature of Reactor [$\degree$C]' ],
-                'ms:14' : [8, '14' ],
-                'ms:18' : [9, '18' ],
-                'ms:28' : [10, '28' ],
-                'ms:32' : [11, '32' ],
-                'ms:40' : [12, '40' ],
-                'ms:44' : [13, '44' ],
-                'int:h2o' : [14, 'H2O' ],
-                'int:n2' : [15, 'N2' ],
-                'int:o2' : [16, 'O2' ],
-                'int:ar' : [17, 'Ar' ],
-                'int:co2' : [18, 'CO2' ],
-                'conc:a:co2' : [24, 'CO2 Analyzer' ]
-                }
+        'time:sec' :          [ 0, 'Time [s]' ],
+        'flow:dig' :          [ 1, 'Flow [ccm]' ],
+        'flow:inert' :        [ 2, 'Flow [ccm]' ],
+        'flow:rxn' :          [ 3, 'Flow [ccm]' ],
+        'press:in' :          [ 4, 'Pin [psig]' ],
+        'press:out' :         [ 5, 'Pout [psig]' ],
+        'temp:in' :           [ 6, 'Temperature of Inlet [$\degree$C]' ],
+        'temp:rxn' :          [ 7, 'Temperature of Reactor [$\degree$C]' ],
+        'ms:14' :             [ 8, '14' ],
+        'ms:18' :             [ 9, '18' ],
+        'ms:28' :             [ 10, '28' ],
+        'ms:32' :             [ 11, '32' ],
+        'ms:40' :             [ 12, '40' ],
+        'ms:44' :             [ 13, '44' ],
+        'int:h2o' :           [ 14, 'Intensity [a.u]' ],
+        'int:n2' :            [ 15, 'Intensity [a.u]' ],
+        'int:o2' :            [ 16, 'Intensity [a.u]' ],
+        'int:ar' :            [ 17, 'Intensity [a.u]' ],
+        'int:co2' :           [ 18, 'Intensity [a.u]' ],
+        'conc:a:co2' :        [ 24, 'Concentration [mol %]' ]
+        }
 
         # made obsolete by rex xls modification (include keys in SS)
         # self._row_params = {
@@ -116,71 +116,102 @@ class LABVIEW(Experiment):
         if (os.path.isfile(self._pick_file) and autoload is True) or (not os.path.isfile(self._ascii_file)) or (self._params.get('status') == 'No'):
             pass
         else:
-            # construct experiment name
-            p = self._params
-            p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run']))
-            
 
-            self.prompt = prompt
+            # FIXME is this the best way?
+            try:
+                # construct experiment name
+                p = self._params
+                p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run']))
 
-            # find new way to determine stage
-            self.get_stage()
 
-            # save mass settings
-            
-            self.cal_curves()
+                self.prompt = prompt
 
-            self.__check__('Experimental notes: ' , p['notes'])
+                # find new way to determine stage
+                self.get_stage()
 
-            self.get_flux()
-            if type(self.p.get('loading')) is float:
-                self.get_coverage()
+                # save mass settings
 
-            """
-            c, C = coverage (corrected)
-            z, Z = trapezoidal capacity
-            m, M = mid point capacity (uncorrected)
-            i, I = mid point capacity (corrected)
-            """
+                self.cal_curves()
 
-            new_labels = {}
+                self.__check__('Experimental notes: ' , p['notes'])
 
-            self._curves._labels.update(new_labels)
+                self.get_flux()
+                if type(self.p.get('loading')) is float:
+                    self.get_coverage()
 
-            # TODO look into pickle master DB
-            # params[prompt][key]
-            self._save()
+                """
+                c, C = coverage (corrected)
+                z, Z = trapezoidal capacity
+                m, M = mid point capacity (uncorrected)
+                i, I = mid point capacity (corrected)
+                """
+
+                new_labels = {}
+
+                self._curves._labels.update(new_labels)
+
+                # TODO look into pickle master DB
+                # params[prompt][key]
+                self._save()
+
+            except:
+                pass
 
     def cal_curves(self):
 
-        h2o_int = float(self.p.get('water:0')),float(self.p.get('water:hum'))
-        co2_int = float(self.p.get('rxn:0')), float(self.p.get('rxn:10')), float(self.p.get('rxn:100'))
 
-        # TODO insert value from excel
-        humidity = self.p.get('water:conc',0)
-        h2o_val = [0, humidity]
-        co2_val = [0,10,100]
+        calibrations = {
+                0 : self.p.get('rxn:0'),
+                10 :self.p.get('rxn:10'),
+                100 : self.p.get('rxn:100'),
+                100 * self.p.get('rxn:alt_conc') : self.p.get('rxn:alt')}
 
-        co2_fit = np.polyfit(co2_int, co2_val, 2)
-        h2o_fit = np.polyfit(h2o_int, h2o_val, 1)
+        # print calibrations
 
+        co2_fit = self.cal_fit(calibrations, 2)
+        
         # TODO implement error checks for negative concentrations
         co2_conc = np.polyval(co2_fit, self.c.get('int:co2')[0])
-        h2o_conc = np.polyval(h2o_fit, self.c.get('int:h2o')[0])
-
-        if h2o_conc.any() < 0 or co2_conc.any() < 0:
-            print 'Concentration less than zero, check calibration'
-
+        
         # Even with the warning, we still want to enforce all concentrations above 0
-
         co2_conc[co2_conc < 0] = 0.
-        h2o_conc[h2o_conc < 0] = 0.
+
+        humidity = self.p.get('water:conc',0)
+
+        h2o_val = [0, float(self.p.get('water:0'))]
+        h2o_int = float(self.p.get('water:0')),float(self.p.get('water:hum'))
+
+        try:
+            h2o_fit = np.polyfit(h2o_int, h2o_val, 1)
+            h2o_conc = np.polyval(h2o_fit, self.c.get('int:h2o')[0])
+
+            if h2o_conc.any() < 0 or co2_conc.any() < 0:
+                print 'Concentration less than zero, check calibration'
+            h2o_conc[h2o_conc < 0] = 0.
+        except:
+            h2o_conc = 0.0 * co2_conc
 
         n2_conc = 1 - co2_conc - h2o_conc
 
         self.c.add('conc:co2', co2_conc, 'Concentration [mol %]')
         self.c.add('conc:h2o', h2o_conc, 'Concentration [mol %]')
         self.c.add('conc:n2', n2_conc, 'Concentration [mol %]')
+
+
+    def cal_fit(self, c_dict, order=2):
+        """
+        convert a dictionary of key (y) and values (x) pairs to polyfit
+        if key or value is '', discard
+        """
+        ints = []
+        conc = []
+
+        for key in c_dict.keys():
+            if key != '' and c_dict[key] != '':
+                conc.append(key)
+                ints.append(c_dict[key])
+
+        return np.polyfit(ints,conc,order)
 
 
     def get_stage(self):
@@ -213,7 +244,7 @@ class LABVIEW(Experiment):
         hours = self.c['time:hr']
 
         if curve in self.c.keys():
-            
+
             # starting offset is 0.0002 hours or 7 seconds
             offset = 0.0002
             while not index:
@@ -226,7 +257,7 @@ class LABVIEW(Experiment):
             try:
 
                 return self.c[curve][index]
-        
+
             except IndexError:
                 print 'Time is not within bounds of %s and %s' % (min(hours), max(hours))
 
@@ -237,18 +268,21 @@ class LABVIEW(Experiment):
         """
         # TODO implement more robust void space  for labview
         # from void calculation of 200CCM (060310_flowtest_200_updated.xlsx)
-        
+
         flow_ads = self.p.get('flow:rxn')
+        mass =  self.p.get('mass:act')
 
+        # get this in cc
         Void_Ads = 0.0
-
         Void_Des = 0.037
+
         if self.prompt in [92,93,94]:
             Void_Ads = 0.037
-        elif flow_ads == 100:
+        elif flow_ads > 90 and flow_ads < 110:
             Void_Ads = 0.116
-        elif flow_ads == 200:
-            Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
+        elif flow_ads > 190 and flow_ads < 210:
+            Void_Ads = 0.116
+            # Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
 
         co2_mid = []
         h2o_mid = []
@@ -271,6 +305,10 @@ class LABVIEW(Experiment):
         flows = old_flow / ((1- co2) + co2 / 1.1717)
         self.c.add('flow:act', flows, 'Flow [sccm]')
 
+        VOID = [Void_Ads, Void_Des, 0]
+
+        print VOID
+
         for i, stage in enumerate(stages):
 
             old_time = self.c.get('time:sec',stage)[0]
@@ -279,8 +317,8 @@ class LABVIEW(Experiment):
             flow = self.c.get('flow:act',stage)[0]
             # if length is 0, add one so we don't crap out the integration
             if len(co2) == 0:
-                
-                
+
+
                 co2_mid.append(0.000001)
                 co2_norm_flux.append(np.array([0,0],float))
                 co2_mid_flux.append(np.array([0,0],float))
@@ -295,9 +333,7 @@ class LABVIEW(Experiment):
                 dt_time.append(np.array([0,0],float))
                 continue
 
-            # now resample all values to a set dt
-            # TODO set all timesteps as constant (5s) in order to plot Desorption P & T swing together
-
+            # set all timesteps as constant (5s) in order to plot Desorption P & T swing together
             dt = 5.0
 
             #time = np.linspace(old_time[0], old_time[-1], len(old_time))
@@ -316,7 +352,7 @@ class LABVIEW(Experiment):
             flow_equil = flow[-5:].mean()
 
             # determine equilibrium co2 and water values
-            
+
             h2o_equil = water[-5:].mean()
 
             if stage == 1: # or stage == 4:
@@ -327,7 +363,7 @@ class LABVIEW(Experiment):
             else:
                 co2_equil = 0.00002
 
-            # Define baseline curve based on 
+            # Define baseline curve based on
             co2_baseline = np.ones(len(co2)) * co2_equil
             h2o_baseline = np.ones(len(co2)) * h2o_equil
 
@@ -340,14 +376,11 @@ class LABVIEW(Experiment):
             #print 'flow is ', flow[-10]
             #print 'Amount close to end ', co2[-2]
 
-
-
-
             if stage == 1:
                 co2_calc = abs(flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
             else:
                 co2_calc = (flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
-                
+
             if co2_calc.any() < 0:
                 print 'CO2 integration is less than zero, check it out'
                 co2_calc[co2_calc < 0] = 0.00001
@@ -361,12 +394,12 @@ class LABVIEW(Experiment):
 
             flux_co2, mid_co2 = analysis.midpoint(time, co2_calc)
             flux_h2o, mid_h2o = analysis.midpoint(time, h2o_calc)
-            
+
 
             # Calculation Results (for params)
             co2_mid.append(mid_co2)
             h2o_mid.append(mid_h2o)
-            
+
             trap.append(analysis.trapezoid(time, co2_calc))
             simp.append(analysis.simpson(time, co2_calc))
 
@@ -375,17 +408,17 @@ class LABVIEW(Experiment):
             # curve composition
             co2_mid_flux.append(flux_co2)
             h2o_mid_flux.append(flux_h2o)
-                        
+
             co2_baselines.append(co2_baseline * 100)
             h2o_baselines.append(h2o_baseline * 100)
 
             dt_time.append(time)
 
             # TODO reinterpolate fluxes back to realtime
-            
+
             co2_norm_flux.append(np.interp(old_time, time, flux_co2))
 
-
+            print stage, 'completed'
             self.__check__('stage' , stage)
             self.__check__('midpoint : ' , co2_mid[i])
             self.__check__('trapezoid : ' , trap[i])
@@ -398,14 +431,14 @@ class LABVIEW(Experiment):
         mid_correction = [mid_void[i] / co2_mid[i] * co2_norm_flux[i] for i in range(3)]
 
         # Assign Curves
-        self.c.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flow [mol/kg*s]')
         # Reinterpolated flux values (to work with time:hr)
-        self.c.compose('flux:co2', co2_norm_flux , stages, 'Molar Flux [mol/kg*s]')
-        self.c.compose('flux:c:co2', mid_correction , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('flux:co2', co2_norm_flux , stages, 'Molar Flow [mol/kg*s]')
+        self.c.compose('flux:c:co2', mid_correction , stages, 'Molar Flow [mol/kg*s]')
         self.c.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration [mol %]')
-        self.c.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flux [mol/kg*s]')
+        self.c.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flow [mol/kg*s]')
         self.c.compose('conc:h2o:baseline', h2o_baselines, stages, 'Concentration [mo %]')
-        
+
         # need a special normalized time to plot all these
         self.c.compose('time:dt:sec', dt_time, stages, 'Time [s]')
         self.c.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time [hr]')
@@ -442,7 +475,7 @@ class LABVIEW(Experiment):
         self.p.set('cap:des_h2o_mid', h2o_mid[1] + h2o_mid[2])
         self.p.set('cap:desp_h2o_mid', h2o_mid[1])
         self.p.set('cap:dest_h2o_mid', h2o_mid[2])
-        
+
         self.p.set('co2:equil', equil_co2)
         self.p.set('dt', DT)
 
