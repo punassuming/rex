@@ -18,7 +18,7 @@ class IR(Experiment):
 
     """
     def __init__(self,
-            xlfile=EXPERIMENT_DB,
+            xlfile=EXPERIMENT_DB(),
             sheet='IR',
             prompt=None,
             debug=0):

@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import rex.curves.analysis as analysis
 import os.path
-from rex.settings import EXPERIMENT_DB, PBR_VOID_SPACE
+from rex.settings import PBR_VOID_SPACE, EXPERIMENT_DB
 
 ADSORPTION = 1
 DESORPTION_P = 2
@@ -20,7 +20,7 @@ class PFR(Experiment):
 
     """
     def __init__(self,
-            xlfile=EXPERIMENT_DB,
+            xlfile=EXPERIMENT_DB(),
             sheet='PFR',
             prompt=None,
             debug=0,

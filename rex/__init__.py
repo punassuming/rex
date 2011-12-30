@@ -1,10 +1,12 @@
 #!/bin/env python
 
 #import pylab as pl
+import os
 import io
 import curves
 import type
 from rex.experiment import *
+from pylab import show as sh
 
 __author__ = "Rich Alesi"
 
@@ -31,13 +33,5 @@ factory function                MixedCase
 module                          lowercase_with_underscores
 global variables                gMixedCaseWithLeadingG
 """
-
-# Global Functions
-
-# CONSTANTS
-#
-HEADER_ROW = 3
-DATA_BEGIN = 5
-EXPERIMENT_DB = '/home/walesi/data/experiment.xls'
 
 

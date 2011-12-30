@@ -2,8 +2,9 @@
 import rex.io as io
 from rex.curves import Curve
 import os
-from rex.settings import HEADER_ROW, DATA_BEGIN, KEY_ROW, DATA_DIR
 from fnmatch import fnmatch
+from rex.settings import HEADER_ROW, KEY_ROW, DATA_BEGIN, DATA_DIR
+
 
 try:
     import cPickle as pickle
@@ -97,7 +98,7 @@ class Experiment:
 
         # define filenames associated with experiment
         # TODO find way to get txt_col information from SS directly
-        path = DATA_DIR + os.sep + self._sh.lower()
+        path = DATA_DIR() + os.sep + self._sh.lower()
         self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
         self._fig_dir = path + os.sep + 'figures' + os.sep
         self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
@@ -124,10 +125,12 @@ class Experiment:
 
             # Ease of use abbr
             self.p = self._params
+            self.pg = self._params.get
             self.c = self._curves
             self.pl = self._curves.ex_plot
             self.twin = self._curves.ex_twinplot
             self.sub = self._curves.ex_subplot
+
 
         else:
             print '%s is not accessible.' % (self._ascii_file)

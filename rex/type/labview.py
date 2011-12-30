@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 from rex.experiment import Experiment
+from rex.settings import EXPERIMENT_DB
 import numpy as np
 import rex.curves.analysis as analysis
-from rex.settings import * #@UnusedWildImport
 import os.path
 
 ADSORPTION = 1
@@ -20,7 +20,7 @@ class LABVIEW(Experiment):
 
     """
     def __init__(self,
-            xlfile=EXPERIMENT_DB,
+            xlfile=EXPERIMENT_DB(),
             sheet='LABVIEW',
             prompt=None,
             debug=0,
