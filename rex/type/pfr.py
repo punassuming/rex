@@ -24,17 +24,17 @@ class PFR(Experiment):
             sheet='PFR',
             prompt=None,
             debug=0,
-            correct=True,
             autoload=True):
 
-        self._raw_columns = {'time:sec' : [3, 'Time / s'],
-                'raw:he' : [4,'He Concentration / %'],
-                'raw:h2o' : [5, 'H$_2$O Concentration / %'],
-                'raw:co2' : [6, 'CO$_2$ Concentration / %'],
-                'int:he' : [7, 'He Intensity [m/z]'],
-                'int:h2o' : [8, 'H20 Intensity [m/z]'],
-                'int:co2' : [9, 'CO2 Intensity [m/z]']
-                }
+        self._raw_columns = {
+            'time:sec' : [3, 'Time / s'],
+            'raw:he' : [4,'He Concentration / %'],
+            'raw:h2o' : [5, 'H$_2$O Concentration / %'],
+            'raw:co2' : [6, 'CO$_2$ Concentration / %'],
+            'int:he' : [7, 'He Intensity [m/z]'],
+            'int:h2o' : [8, 'H20 Intensity [m/z]'],
+            'int:co2' : [9, 'CO2 Intensity [m/z]']
+        }
 
         self._row_params = {'#' : 0,
                 'book' : 4,
@@ -63,15 +63,16 @@ class PFR(Experiment):
         # After defining the key parameters, we execute our superclasses init
         # which access excel file, pulls info into self._row, and then parses data into self._data_array
         Experiment.__init__(self,
-                delim = '\t',
-                txt_col = 5,
                 xlfile=xlfile,
                 sheet=sheet,
                 prompt=prompt,
+                delim = '\t',
+                txt_col = 5,
                 debug=debug,
                 autoload=autoload)
 
         if hasattr(self, '_curves'):
+            self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time / hr')
             self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time / hr')
 
             """
@@ -86,16 +87,18 @@ class PFR(Experiment):
             b = book number
             """
 
-            self._curves._labels = {'N':'\n',
-                        'b':self._params.get('Book'),
-                        'n':self._params.get('Name'),
-                        't':'$\mathrm{T}_{ADS} :$ \t\t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:ads')),
-                        'T':'$\mathrm{T}_{DES} :$ \t\t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:des')),
-                        'r':'$\mathrm{Ramp:}$ \t$%s\,^{\circ}\mathrm{C/min}$' % (self._params.get('temp:ramp')),
-                        'D':'$\Delta\mathrm{T:}$ \t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:des') - self._params.get('temp:ads')),
-                        'p':'$p_{CO_2}$/$p_0:$ \t$0.1$',
-                        'P':'p$_{CO_2}$/p$_0:$ \t$0.1$ -> $0.0$',
-                        'h':'%0.1f%% H$_{2}$O' % (100.0*self._params.get('conc:H2O'))}
+            self._curves._labels = {
+                'N':'\n',
+                'b':self._params.get('Book'),
+                'n':self._params.get('Name'),
+                't':'$\mathrm{T}_{ADS} :$ \t\t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:ads')),
+                'T':'$\mathrm{T}_{DES} :$ \t\t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:des')),
+                'r':'$\mathrm{Ramp:}$ \t$%s\,^{\circ}\mathrm{C/min}$' % (self._params.get('temp:ramp')),
+                'D':'$\Delta\mathrm{T:}$ \t$%0.1f\,^{\circ}\mathrm{C}$' % (self._params.get('temp:des') - self._params.get('temp:ads')),
+                'p':'$p_{CO_2}$/$p_0:$ \t$0.1$',
+                'P':'p$_{CO_2}$/p$_0:$ \t$0.1$ -> $0.0$',
+                'h':'%0.1f%% H$_{2}$O' % (100.0*self._params.get('conc:H2O'))
+            }
 
         if (os.path.isfile(self._pick_file) and autoload is True) or (not os.path.isfile(self._ascii_file)) or (self._params.get('status') == 'No'):
             pass
@@ -109,7 +112,6 @@ class PFR(Experiment):
             # Flux correction from run 11
             self._params.set('Void', PBR_VOID_SPACE)
 
-            self.correct = correct
             self.prompt = prompt
 
             date = self._curves._raw[1][0]
@@ -171,20 +173,19 @@ class PFR(Experiment):
             """
 
             new_labels = {
-            'i':'$\mathrm{Mol}_{ADS}\ :$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (abs(self._params.get('capc:ads_mid'))),
-            'I':'$\mathrm{Mol}_{DES}\ :$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (abs(self._params.get('capc_des_mid'))),
-            'm':'$\mathrm{Mol}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:ads_mid')),
-            'M':'$\mathrm{Mol}_{DES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:des_mid')),
-            'c':'$\mathrm{Eff}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/\mathrm{mol\ }N$' % (self._params.get('effc:ads')),
-            'C':'$\mathrm{Eff}_{DES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/\mathrm{mol\ }N$' % (self._params.get('effc:des')),
-            'z':'$\mathrm{Mol}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:ads_trap')),
-            'X':'$\mathrm{Mol}_{PDES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:desp_trap')),
-            'Y':'$\mathrm{Mol}_{TDES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:dest_trap'))}
+                'i':'$\mathrm{Mol}_{ADS}\ :$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (abs(self._params.get('capc:ads_mid'))),
+                'I':'$\mathrm{Mol}_{DES}\ :$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (abs(self._params.get('capc:des_mid'))),
+                'm':'$\mathrm{Mol}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:ads_mid')),
+                'M':'$\mathrm{Mol}_{DES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:des_mid')),
+                'c':'$\mathrm{Eff}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/\mathrm{mol\ }N$' % (self._params.get('effc:ads')),
+                'C':'$\mathrm{Eff}_{DES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/\mathrm{mol\ }N$' % (self._params.get('effc:des')),
+                'z':'$\mathrm{Mol}_{ADS}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:ads_trap')),
+                'X':'$\mathrm{Mol}_{PDES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:desp_trap')),
+                'Y':'$\mathrm{Mol}_{TDES}:$ \t$%0.2f$ $\mathrm{mol\ }CO_2/kg$' % (self._params.get('cap:dest_trap'))
+            }
 
             self._curves._labels.update(new_labels)
             self._save()
-
-
 
     def get_stage(self):
         # TODO merge with Labview
