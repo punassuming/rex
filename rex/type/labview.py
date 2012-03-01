@@ -126,20 +126,39 @@ class LABVIEW(Experiment):
 
     def cal_curves(self):
 
-
         calibrations = {
                 0 : self.p.get('rxn:0'),
                 10 :self.p.get('rxn:10'),
                 100 : self.p.get('rxn:100'),
                 100 * self.p.get('rxn:alt_conc') : self.p.get('rxn:alt')}
 
-        # print calibrations
+        # discard empties
+        del_list = []
+        for key in calibrations:
+            if key == '' or calibrations[key] == '':
+                del_list.append(key)
+
+        for i in del_list:
+            del calibrations[i]
 
         co2_fit = self.cal_fit(calibrations, 2)
-        
+
+        test = 0
+        if test:
+            x_test = np.linspace(min(self.c.get('int:co2')[0]),max(self.c.get('int:co2')[0]),100)
+            y_test = np.polyval(co2_fit, x_test)
+
+            plt.figure()
+            plt.title("Calibration Check %s" % self.prompt)
+            plt.plot(x_test,y_test)
+
+            plt.scatter(calibrations.values(),calibrations.keys())
+            # plt.show()
+
         # TODO implement error checks for negative concentrations
         co2_conc = np.polyval(co2_fit, self.c.get('int:co2')[0])
-        
+
+
         # Even with the warning, we still want to enforce all concentrations above 0
         co2_conc[co2_conc < 0] = 0.
 
@@ -148,6 +167,7 @@ class LABVIEW(Experiment):
         h2o_val = [0, float(self.p.get('water:0'))]
         h2o_int = float(self.p.get('water:0')),float(self.p.get('water:hum'))
 
+        # TODO if h2o is not set up properly, you get polyfit errors
         try:
             h2o_fit = np.polyfit(h2o_int, h2o_val, 1)
             h2o_conc = np.polyval(h2o_fit, self.c.get('int:h2o')[0])
@@ -160,26 +180,16 @@ class LABVIEW(Experiment):
 
         n2_conc = 1 - co2_conc - h2o_conc
 
-        self.c.add('conc:co2', co2_conc, 'Concentration [mol %]')
-        self.c.add('conc:h2o', h2o_conc, 'Concentration [mol %]')
-        self.c.add('conc:n2', n2_conc, 'Concentration [mol %]')
-
+        self.c.add('conc:co2', co2_conc, 'Concentration (mol %)')
+        self.c.add('conc:h2o', h2o_conc, 'Concentration (mol %)')
+        self.c.add('conc:n2', n2_conc, 'Concentration (mol %)')
 
     def cal_fit(self, c_dict, order=2):
         """
         convert a dictionary of key (y) and values (x) pairs to polyfit
-        if key or value is '', discard
         """
-        ints = []
-        conc = []
 
-        for key in c_dict.keys():
-            if key != '' and c_dict[key] != '':
-                conc.append(key)
-                ints.append(c_dict[key])
-
-        return np.polyfit(ints,conc,order)
-
+        return np.polyfit(c_dict.values(),c_dict.keys(),order)
 
     def get_stage(self):
 
