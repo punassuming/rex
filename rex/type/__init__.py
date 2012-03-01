@@ -2,7 +2,7 @@
 
 import pdb
 from rex.experiment import Experiment
-import rex.io as io
+import rex.utils.io as io
 import datetime
 import numpy as np
 
@@ -19,4 +19,5 @@ from tga import TGA
 from tgms import TGMS
 from ir import IR
 from labview import LABVIEW
+from dsc import DSC
 
