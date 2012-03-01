@@ -2,7 +2,7 @@
 
 import pdb
 from rex.experiment import Experiment
-import rex.io as io
+import rex.utils.io as io
 import datetime
 import numpy as np
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from rex.experiment import Experiment
+from rex.settings import EXPERIMENT_DB
 
 EXPERIMENT_DB = None
 
@@ -19,11 +20,9 @@ class Default(Experiment):
             debug=0):
 
 
-#        self._raw_columns = {'Curve', [column, 'label']
-#                }
-
-        self._raw_columns = {
-            }
+        # self._raw_columns = {
+        #     'Curve', [column, 'label']
+        # }
 
         Experiment.__init__(self,
                 xlfile = xlfile,
@@ -31,7 +30,6 @@ class Default(Experiment):
                 prompt = prompt,
                 delim = '\t',
                 txt_col = 6,
-                dat = None,
                 debug = debug)
 
         # save information from Excel file
@@ -40,10 +38,9 @@ class Default(Experiment):
         row_params = {
             }
 
-        self.init_param(row_params)
-
-        # construct experiment name
-        self.set_param('Name', '%s-%s.%i' % (row[1], row[2], row[3]))
+        if hasattr(self, '_curves'):
+            self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time (hr)')
+            self._curves.add('time:min', self._curves['time:sec']/60., 'Time (min)')
 
         # initial date and time (for reference)
         dcol = 1 # date column in txt file

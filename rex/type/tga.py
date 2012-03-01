@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 from rex.experiment import Experiment
+from rex.settings import EXPERIMENT_DB
 
 
 HEADER_ROW = 3
 DATA_BEGIN = 5
-EXPERIMENT_DB = '/home/walesi/data/experiment.xls'
 
 class TGA(Experiment):
     """
@@ -16,7 +16,7 @@ class TGA(Experiment):
 
     """
     def __init__(self,
-            xlfile=EXPERIMENT_DB,
+            xlfile=EXPERIMENT_DB(),
             sheet='TGA',
             prompt=None,
             debug=0):
