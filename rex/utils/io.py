@@ -10,6 +10,8 @@ def prompted(xlfile, sheet):
     Prompt for experimental information and return selected experiment (file is excel file name + path)
     """
 
+    print xlfile
+    print sheet
     array = excel_to_array(filename=xlfile, sheet=sheet)
     entries = []
     listing = []
@@ -36,7 +38,7 @@ def prompted(xlfile, sheet):
 def parse_ascii(ascii, delim='\t', header=True):
     """        Parse all information from csv or tab delimited data and return as array """
 
-    whole = open(ascii).readlines()
+    whole = open(ascii).read().split('\n')
 
     # find number of cols in middle and only save information from sections that have that many columns
     ncols = len(whole[-10].split(delim))
