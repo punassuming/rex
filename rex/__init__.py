@@ -2,7 +2,7 @@
 
 #import pylab as pl
 import os
-import io
+import utils
 import curves
 import type
 from rex.experiment import *

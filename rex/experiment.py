@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rex.io as io
+import rex.utils.io as io
 from rex.curves import Curve
 import os
 from fnmatch import fnmatch
@@ -98,10 +98,10 @@ class Experiment:
 
         # define filenames associated with experiment
         # TODO find way to get txt_col information from SS directly
-        path = DATA_DIR() + os.sep + self._sh.lower()
-        self._ascii_file = path + os.sep + 'data' + os.sep + self._row[txt_col]
-        self._fig_dir = path + os.sep + 'figures' + os.sep
-        self._pick_file = path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
+        self._path = DATA_DIR() + os.sep + self._sh.lower()
+        self._ascii_file = self._path + os.sep + 'data' + os.sep + self._row[txt_col]
+        self._fig_dir = self._path + os.sep + 'figures' + os.sep
+        self._pick_file = self._path + os.sep + 'data' + os.sep + ('%02d-' % prompt) + os.path.splitext(self._row[txt_col])[0] + '.p'
 
         self.__check__('File name: ',self._ascii_file)
 
@@ -118,6 +118,12 @@ class Experiment:
             else:
                 self._curves = Curve(self._data_array)
 
+            self.c = self._curves
+            self.pl = self._curves.ex_plot
+            self.twin = self._curves.ex_twinplot
+            self.sub = self._curves.ex_subplot
+
+
             if hasattr(self, '_row_params'):
                 self._params = Param(self._row,row_data=self._row_params, xl_keys=self._keys)
             else:
@@ -126,10 +132,6 @@ class Experiment:
             # Ease of use abbr
             self.p = self._params
             self.pg = self._params.get
-            self.c = self._curves
-            self.pl = self._curves.ex_plot
-            self.twin = self._curves.ex_twinplot
-            self.sub = self._curves.ex_subplot
 
 
         else:

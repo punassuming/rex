@@ -14,9 +14,9 @@ PBR_BLANKS = [11,37,62]
 
 def EXPERIMENT_DB():
     if os.environ.get('SYSTEMROOT'):
-        return 'F:\\Documents\\projects\\_figures\\experiment.xls'
+        return 'F:\\Documents\\projects\\figures\\experiment.xls'
     else:
-        return '/home/walesi/projects/_figures/experiment.xls'
+        return '/home/walesi/projects/figures/experiment.xls'
 
 def DATA_DIR():
     if os.environ.get('SYSTEMROOT'):
