@@ -34,7 +34,7 @@ methods :
 from matplotlib.pyplot import twinx, gca, subplot, title, show, setp, legend, plot
 
 def go_with_x():
-    print "X started"
+    # print "X started"
     from matplotlib.pyplot import twinx, gca, subplot, title, show, setp, legend, plot
 
 class Curves(object):
