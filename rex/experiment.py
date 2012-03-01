@@ -13,16 +13,16 @@ except:
 
 class Param(dict):
         # Parameter Methods
-    def __init__(self, rows, rowdata={}, xl_keys=[]):
+    def __init__(self, rows, row_data={}, xl_keys=[]):
         """ Parse all defined values from excel rows into individual paramters """
         dict.__init__(self)
 
         # if defining values from _row_params
-        for i in rowdata.keys():
-            if not hasattr(rowdata[i],'__iter__'):
-                self.set(i, rows[rowdata[i]])
+        for i in row_data.keys():
+            if not hasattr(row_data[i],'__iter__'):
+                self.set(i, rows[row_data[i]])
             else:
-                self.set(i, [rows[x] for x in rowdata[i]])
+                self.set(i, [rows[x] for x in row_data[i]])
 
         for i, j in enumerate(xl_keys):
             if j is not None and j != '' and j != 0:
