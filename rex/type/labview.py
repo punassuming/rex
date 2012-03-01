@@ -85,44 +85,44 @@ class LABVIEW(Experiment):
         else:
 
             # FIXME is this the best way?
-            try:
-                # construct experiment name
-                p = self._params
-                p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run']))
+            # try:
+            # construct experiment name
+            p = self._params
+            p.set('name', '%s-%s-%s' % (p['sorbent'], p['exp'],p['run']))
 
 
-                self.prompt = prompt
+            self.prompt = prompt
 
-                # find new way to determine stage
-                self.get_stage()
+            # find new way to determine stage
+            self.get_stage()
 
-                # save mass settings
+            # save mass settings
+            self.cal_curves()
 
-                self.cal_curves()
+            self.__check__('Experimental notes: ' , p['notes'])
 
-                self.__check__('Experimental notes: ' , p['notes'])
+            self.get_flux()
+            if type(self.p.get('loading')) is float:
+                self.get_coverage()
 
-                self.get_flux()
-                if type(self.p.get('loading')) is float:
-                    self.get_coverage()
+            """
+            c, C = coverage (corrected)
+            z, Z = trapezoidal capacity
+            m, M = mid point capacity (uncorrected)
+            i, I = mid point capacity (corrected)
+            """
 
-                """
-                c, C = coverage (corrected)
-                z, Z = trapezoidal capacity
-                m, M = mid point capacity (uncorrected)
-                i, I = mid point capacity (corrected)
-                """
+            new_labels = {}
 
-                new_labels = {}
+            self._curves._labels.update(new_labels)
 
-                self._curves._labels.update(new_labels)
+            # TODO look into pickle master DB
+            # params[prompt][key]
+            # self._save()
 
-                # TODO look into pickle master DB
-                # params[prompt][key]
-                self._save()
-
-            except:
-                pass
+            # except:
+            #     print "Exception Error"
+            #     pass
 
     def cal_curves(self):
 
