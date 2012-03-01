@@ -2,7 +2,6 @@
 
 from rex import *
 from pylab import *
-import plotsize as ps
 
 for prompt in [14,55]:
     ps.set_figsize_in(7,10)
