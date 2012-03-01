@@ -4,6 +4,7 @@ from rex.experiment import Experiment
 from rex.settings import EXPERIMENT_DB
 import numpy as np
 import rex.curves.analysis as analysis
+import matplotlib.pyplot as plt
 import os.path
 
 ADSORPTION = 1
@@ -24,79 +25,45 @@ class LABVIEW(Experiment):
             sheet='LABVIEW',
             prompt=None,
             debug=0,
-            correct=True,
             autoload=False):
 
         self._raw_columns = {
-        'time:sec' :          [ 0, 'Time [s]' ],
-        'flow:dig' :          [ 1, 'Flow [ccm]' ],
-        'flow:inert' :        [ 2, 'Flow [ccm]' ],
-        'flow:rxn' :          [ 3, 'Flow [ccm]' ],
-        'press:in' :          [ 4, 'Pin [psig]' ],
-        'press:out' :         [ 5, 'Pout [psig]' ],
-        'temp:in' :           [ 6, 'Temperature of Inlet [$\degree$C]' ],
-        'temp:rxn' :          [ 7, 'Temperature of Reactor [$\degree$C]' ],
+        'time:sec' :          [ 0, 'Time (s)' ],
+        'flow:dig' :          [ 1, 'Flow (ccm)' ],
+        'flow:inert' :        [ 2, 'Flow (ccm)' ],
+        'flow:rxn' :          [ 3, 'Flow (ccm)' ],
+        'press:in' :          [ 4, 'Pin (psig)' ],
+        'press:out' :         [ 5, 'Pout (psig)' ],
+        'temp:in' :           [ 6, 'Temperature of Inlet ($\degree$C)' ],
+        'temp:rxn' :          [ 7, 'Temperature of Reactor ($\degree$C)' ],
         'ms:14' :             [ 8, '14' ],
         'ms:18' :             [ 9, '18' ],
         'ms:28' :             [ 10, '28' ],
         'ms:32' :             [ 11, '32' ],
         'ms:40' :             [ 12, '40' ],
         'ms:44' :             [ 13, '44' ],
-        'int:h2o' :           [ 14, 'Intensity [a.u]' ],
-        'int:n2' :            [ 15, 'Intensity [a.u]' ],
-        'int:o2' :            [ 16, 'Intensity [a.u]' ],
-        'int:ar' :            [ 17, 'Intensity [a.u]' ],
-        'int:co2' :           [ 18, 'Intensity [a.u]' ],
-        'conc:a:co2' :        [ 24, 'Concentration [mol %]' ]
+        'int:h2o' :           [ 14, 'Intensity (a.u)' ],
+        'int:n2' :            [ 15, 'Intensity (a.u)' ],
+        'int:o2' :            [ 16, 'Intensity (a.u)' ],
+        'int:ar' :            [ 17, 'Intensity (a.u)' ],
+        'int:co2' :           [ 18, 'Intensity (a.u)' ],
+        'conc:a:co2' :        [ 24, 'Concentration (mol %)' ]
         }
-
-        # made obsolete by rex xls modification (include keys in SS)
-        # self._row_params = {
-        #         '#' : 0,
-        #         'name' : 1,
-        #         'exp' : 2,
-        #         'run' : 3,
-        #         'book' : 4,
-        #         'water:0' : 10,
-        #         'water:hum' : 11,
-        #         'rxn:0' : 12,
-        #         'rxn:10' : 13,
-        #         'rxn:100' : 14,
-        #         'flow:inert' : 15,
-        #         'flow:rxn' : 16,
-        #         'timing:ads<' : 17,
-        #         'timing:ads>' : 18,
-        #         'timing:des<' : 19,
-        #         'timing:des|' : 20,
-        #         'timing:des>' : 21,
-        #         'time:rel' : range(17,22),
-        #         'temp:ads' : 25,
-        #         'temp:des' : 26,
-        #         'temp:hum' : 27,
-        #         'temp:ramp' : 28,
-        #         'temp:dry' : 29,
-        #         'time:dry' : 30,
-        #         'mass:pre' : 31,
-        #         'mass:post' : 32,
-        #         'loading' : 33,
-        #         'notes' : 35
-        #         }
-
 
         # After defining the key parameters, we execute our superclasses init
         # which access excel file, pulls info into self._row, and then parses data into self._data_array
         Experiment.__init__(self,
-                delim = ',',
-                txt_col = 6,
                 xlfile=xlfile,
                 sheet=sheet,
                 prompt=prompt,
+                delim = ',',
+                txt_col = 6,
                 debug=debug,
                 autoload=autoload)
 
         if hasattr(self, '_curves'):
-            self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time [hr]')
-            self._curves.add('time:min', self._curves['time:sec']/60., 'Time [min]')
+            self._curves.add('time:hr', self._curves['time:sec']/3600., 'Time (hr)')
+            self._curves.add('time:min', self._curves['time:sec']/60., 'Time (min)')
 
             """
             lower case is adsorption
@@ -431,17 +398,17 @@ class LABVIEW(Experiment):
         mid_correction = [mid_void[i] / co2_mid[i] * co2_norm_flux[i] for i in range(3)]
 
         # Assign Curves
-        self.c.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flow [mol/kg*s]')
+        self.c.compose('flux:dt:co2', co2_mid_flux , stages, 'Molar Flow (mol/kg*s)')
         # Reinterpolated flux values (to work with time:hr)
-        self.c.compose('flux:co2', co2_norm_flux , stages, 'Molar Flow [mol/kg*s]')
-        self.c.compose('flux:c:co2', mid_correction , stages, 'Molar Flow [mol/kg*s]')
-        self.c.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration [mol %]')
-        self.c.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flow [mol/kg*s]')
-        self.c.compose('conc:h2o:baseline', h2o_baselines, stages, 'Concentration [mo %]')
+        self.c.compose('flux:co2', co2_norm_flux , stages, 'Molar Flow (mol/kg*s)')
+        self.c.compose('flux:c:co2', mid_correction , stages, 'Molar Flow (mol/kg*s)')
+        self.c.compose('conc:co2:baseline', co2_baselines, stages, 'Concentration (mol %)')
+        self.c.compose('flux:h2o', h2o_mid_flux , stages, 'Molar Flow (mol/kg*s)')
+        self.c.compose('conc:h2o:baseline', h2o_baselines, stages, 'Concentration (mo %)')
 
         # need a special normalized time to plot all these
-        self.c.compose('time:dt:sec', dt_time, stages, 'Time [s]')
-        self.c.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time [hr]')
+        self.c.compose('time:dt:sec', dt_time, stages, 'Time (s)')
+        self.c.compose('time:dt:hr', [i / 3600. for i in dt_time], stages, 'Time (hr)')
 
         # Save values in params
         self.p.set('cap:ads_mid', co2_mid[0])
@@ -505,7 +472,7 @@ class LABVIEW(Experiment):
 
 
             # Save Curves
-            self.c.compose('cov', cov, stages, 'Amine Efficiency')
+            self.c.compose('cov', cov, stages, 'Amine Efficiency %')
             #self.c.compose('cov:corr', covcor , stages, 'Amine Efficiency')
 
             # and save parameter information
