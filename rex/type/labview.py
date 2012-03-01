@@ -258,8 +258,12 @@ class LABVIEW(Experiment):
         elif flow_ads > 90 and flow_ads < 110:
             Void_Ads = 0.116
         elif flow_ads > 190 and flow_ads < 210:
-            Void_Ads = 0.116
-            # Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
+            # Void_Ads = 0.116
+            Void_Ads = 0.281 # 0.116+0.165 additional losses at higher flow
+
+        # for the temperature only series, there shouldn't be any void space, right?
+        if self.prompt in range(125,143):
+            Void_Ads = 0.03
 
         co2_mid = []
         h2o_mid = []
@@ -280,11 +284,11 @@ class LABVIEW(Experiment):
 
         # correct for mass flow meter correction with CO2
         flows = old_flow / ((1- co2) + co2 / 1.1717)
-        self.c.add('flow:act', flows, 'Flow [sccm]')
+        self.c.add('flow:act', flows, 'Flow (sccm)')
 
         VOID = [Void_Ads, Void_Des, 0]
 
-        print VOID
+        # print VOID
 
         for i, stage in enumerate(stages):
 
@@ -335,10 +339,10 @@ class LABVIEW(Experiment):
             if stage == 1: # or stage == 4:
                 co2_equil = max(0.0,co2[-7:-2].mean())
             # Define special desorption cases (10%)
-            elif self.prompt in [92,93,94]:
-                co2_equil = 0.1000
             else:
-                co2_equil = 0.00002
+                # this does not always go down to zero
+                # co2_equil = max(0.0,self.c.get('conc:co2',stage=6)[0][-7:-2].mean())
+                co2_equil = self.p.get('co2:des')
 
             # Define baseline curve based on
             co2_baseline = np.ones(len(co2)) * co2_equil
@@ -352,6 +356,8 @@ class LABVIEW(Experiment):
 
             #print 'flow is ', flow[-10]
             #print 'Amount close to end ', co2[-2]
+
+            # 24.66 is
 
             if stage == 1:
                 co2_calc = abs(flow * co2 - flow_equil * co2_baseline) / 60 / 24.66
@@ -395,7 +401,7 @@ class LABVIEW(Experiment):
 
             co2_norm_flux.append(np.interp(old_time, time, flux_co2))
 
-            print stage, 'completed'
+            # print stage, 'completed'
             self.__check__('stage' , stage)
             self.__check__('midpoint : ' , co2_mid[i])
             self.__check__('trapezoid : ' , trap[i])
